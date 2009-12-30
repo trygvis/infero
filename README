@@ -1,0 +1,7 @@
+Infero is a graphical user interface for Logic Analyzers.
+
+It currently only support saleae-logic-libusb [1] as the underlying
+Logic Analyzer. Support for other logic analyzers will have to be
+added by others.
+
+[1]: http://github.com/keesj/saleae-logic-libusb
