@@ -5,8 +5,6 @@ import infero.gui.domain.Channel.Properties;
 import static infero.gui.domain.Channel.Properties.NAME;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
  */
 public class Channel extends AbstractDomainObject<Properties> {
     public final Integer index;

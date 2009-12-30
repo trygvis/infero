@@ -12,27 +12,27 @@ import static infero.gui.domain.CurrentSample.Properties.VALUES;
 import static infero.gui.domain.CurrentSample.Properties.ZOOM;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
+ * TODO: As an optimization the GUI should buffer the last rendered image.
+ *
+ * This will prevent 
+ *
  */
 public class ChannelTracePanel extends JPanel {
     private final Channel channel;
     private final CurrentSample currentSample;
 
-    private long timestampOfLastPaintedSample;
+//    private long timestampOfLastPaintedSample;
 
     public ChannelTracePanel(Channel channel, CurrentSample currentSample) {
         this.channel = channel;
         this.currentSample = currentSample;
         currentSample.addPropertyChangeListener(VALUES, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
-                System.out.println("ChannelTracePanel.propertyChange, repaint");
                 ChannelTracePanel.this.repaint();
             }
         });
         currentSample.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
-                System.out.println("ChannelTracePanel.propertyChange, repaint");
                 ChannelTracePanel.this.repaint();
             }
         });
@@ -51,10 +51,11 @@ public class ChannelTracePanel extends JPanel {
             return;
         }
 
-        if (timestampOfLastPaintedSample == currentSample.getTimestamp()) {
-            System.out.println("ChannelTracePanel.paint. Skipping, same sample");
-            return;
-        }
+        // This was not smart enough
+//        if (timestampOfLastPaintedSample == currentSample.getTimestamp()) {
+//            System.out.println("ChannelTracePanel.paint. Skipping, same sample");
+//            return;
+//        }
 
         // -----------------------------------------------------------------------
         // Clear the area
@@ -68,8 +69,6 @@ public class ChannelTracePanel extends JPanel {
         // -----------------------------------------------------------------------
 
         graphics.setColor(getForeground());
-
-        timestampOfLastPaintedSample = currentSample.getTimestamp();
 
         byte[] values = currentSample.getValues();
         int valuesLength = currentSample.getValues().length;

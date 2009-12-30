@@ -11,8 +11,6 @@ import infero.gui.domain.LogicAnalyzer;
 import javax.swing.*;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
  */
 @Singleton
 public class MainView extends FormPanel {

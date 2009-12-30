@@ -6,8 +6,6 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
-* @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
-* @version $Id$
 */
 public class CleverIntegerListCellRenderer extends DefaultListCellRenderer {
     private final String suffix;

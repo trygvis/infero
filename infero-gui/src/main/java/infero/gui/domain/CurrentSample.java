@@ -6,8 +6,6 @@ import infero.gui.domain.CurrentSample.Properties;
 import static infero.gui.domain.CurrentSample.Properties.*;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
  */
 @Singleton
 public class CurrentSample extends AbstractDomainObject<Properties> {

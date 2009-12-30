@@ -3,8 +3,6 @@ package infero.gui.domain;
 import static java.lang.String.valueOf;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
  */
 public class CleverInteger {
 

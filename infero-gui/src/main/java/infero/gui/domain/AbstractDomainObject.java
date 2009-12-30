@@ -4,8 +4,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
  */
 public class AbstractDomainObject<E extends Enum> {
     private final transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);

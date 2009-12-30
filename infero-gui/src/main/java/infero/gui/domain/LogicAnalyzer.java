@@ -9,8 +9,6 @@ import static java.util.Collections.unmodifiableList;
 import static infero.gui.domain.CleverInteger.cleverInteger;
 
 /**
- * @author <a href="mailto:trygve.laugstol@arktekk.no">Trygve Laugst&oslash;l</a>
- * @version $Id$
  */
 @Singleton
 public class LogicAnalyzer {
