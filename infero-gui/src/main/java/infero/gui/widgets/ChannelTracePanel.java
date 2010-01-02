@@ -9,6 +9,7 @@ import static infero.util.Lap.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.beans.*;
 
 /**
@@ -22,11 +23,14 @@ public class ChannelTracePanel extends JPanel {
     private final ChannelImageCreator imageCreator;
     private final Channel channel;
     private final RawSample rawSample;
+    private final TraceModel traceModel;
 
-    public ChannelTracePanel(ChannelImageCreator imageCreator, Channel channel, RawSample rawSample) {
+    public ChannelTracePanel(ChannelImageCreator imageCreator, Channel channel, final RawSample rawSample, final TraceModel traceModel) {
         this.imageCreator = imageCreator;
         this.channel = channel;
         this.rawSample = rawSample;
+        this.traceModel = traceModel;
+
         rawSample.addPropertyChangeListener(VALUES, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 ChannelTracePanel.this.repaint();
@@ -35,6 +39,13 @@ public class ChannelTracePanel extends JPanel {
         rawSample.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 ChannelTracePanel.this.repaint();
+            }
+        });
+
+        addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseMoved(MouseEvent e) {
+                System.out.println(String.format("mouse: x=%d, y=%d", e.getX(), e.getY()));
+                traceModel.setMousePosition(e.getPoint());
             }
         });
     }
@@ -65,7 +76,7 @@ public class ChannelTracePanel extends JPanel {
 
         graphics.setColor(getForeground());
 
-        double zoom = rawSample.getZoom();
+        double zoom = traceModel.getZoom();
         int width = getWidth();
         int highY = 1;
         int lowY = getHeight() - 2;

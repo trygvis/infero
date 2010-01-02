@@ -24,7 +24,7 @@ public class ChannelImageCreatorTest {
         byte[] values = new byte[100];
         Arrays.fill(values, (byte)0xf0);
         RawSample rawSample = new RawSample();
-        rawSample.setSample(values);
+        rawSample.setSample(values, 1000);
 
         Chunk[] chunks = rawSample.createChunks(0, rawSample.getCount() - 1, 10);
 
@@ -68,7 +68,7 @@ public class ChannelImageCreatorTest {
         lap = lap.lap("memory fill");
         Arrays.fill(values, (byte)0xf0);
         RawSample rawSample = new RawSample();
-        rawSample.setSample(values);
+        rawSample.setSample(values, 1000);
 
         lap = lap.lap("Create chunks");
 

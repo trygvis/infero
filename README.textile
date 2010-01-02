@@ -16,6 +16,13 @@ Infero uses:
 * Abeille[2] to mash up the GUI
 * JGoodies' form library to do the layout
 
+h2. Developing the Forms
+
+Infero uses Abeille which is a GUI to create forms. It should be downloaded
+for you when you run ./install-deps.sh, so to run the designer just run:
+
+.pre java -jar abeilleforms/designer.jar &
+
 h3. How to Build
 
 First, make sure you thave the required dependencies installed.
@@ -47,6 +54,10 @@ pre. svn co https://svn.kenai.com/svn/guts~guts-events/trunk guts~guts-events
 cd guts~guts-events
 mvn -r clean install -Dmaven.test.skip
 
+On some platforms you may get an exception about a compilation error on line
+174 of guts-gui/src/main/java/net/guts/gui/resource/MnemonicInfo.java. Remove
+the line and run Maven again.
+
 h3. How to Run From Source
 
 There are currently no installer or packages to install to run
@@ -55,6 +66,8 @@ infero, but it can be run from the source tree like this:
 pre. mvn -f infero-gui/pom.xml install exec:java -Dmaven.test.skip -Dexec.mainClass=infero.gui.InferoGui
 
 If you really just want to run it remove the @install@ argument.
+
+It is also possible to run infero.gui.InferoGui directly from an IDE.
 
 h2. Footnotes
 

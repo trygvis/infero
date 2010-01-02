@@ -1,6 +1,7 @@
 package infero.gui;
 
 import com.google.inject.Inject;
+import static javax.swing.UIManager.*;
 import net.guts.gui.application.AppLifecycleStarter;
 import net.guts.gui.application.GutsApplicationActions;
 import net.guts.gui.application.WindowController;
@@ -15,8 +16,6 @@ import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-/**
- */
 public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final WindowController windowController;
     private final MenuFactory menuFactory;
@@ -45,6 +44,18 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
 
     public void startup(String[] args) {
         System.out.println("InferoLifecycleStarter.startup");
+
+        try {
+            setLookAndFeel(getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
 
         JFrame mainFrame = new JFrame();
 

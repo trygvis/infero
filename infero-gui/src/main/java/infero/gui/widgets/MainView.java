@@ -4,65 +4,101 @@ import com.google.inject.*;
 import com.jeta.forms.components.panel.*;
 import com.jeta.forms.gui.form.*;
 import infero.gui.domain.*;
+import static infero.gui.domain.TraceModel.Properties.*;
 import infero.gui.domain.services.*;
 import static infero.gui.widgets.MainView.Names.*;
 import infero.gui.widgets.util.*;
+import infero.util.*;
+import static infero.util.NumberFormats.*;
+import static java.lang.String.valueOf;
 
 import javax.swing.*;
+import javax.swing.event.*;
 import java.awt.event.*;
+import java.beans.*;
 
 @Singleton
 public class MainView extends FormPanel {
     public static class Names {
-        public static final String ID_TIMELINESLIDER = "timelineSlider";  //javax.swing.JSlider
-        public static final String ID_ZOOMSLIDER = "zoomSlider";  //javax.swing.JSlider
+        public static final String ID_ZOOM_SLIDER = "zoom.slider";  //javax.swing.JSlider
         public static final String ID_TIMELINE = "timeline";  //com.jeta.forms.components.label.JETALabel
+        public static final String ID_TIME_SCROLLBAR = "time.scrollbar";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_ZOOM = "zoom";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_DECIMAL = "value.decimal";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_TIME = "time";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_HEX = "value.hex";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_OCTAL = "value.octal";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_BINARY = "value.binary";  //com.jeta.forms.components.label.JETALabel
-        public static final String ID_LOG = "log";  //javax.swing.JTextArea
+        public static final String ID_LOG_FORM = "log.form";  //javax.swing.JPanel
+        public static final String ID_LOG_TABLE = "log.table";  //javax.swing.JTable
+        public static final String ID_CLEAR_BUTTON = "clear.button";  //javax.swing.JButton
         public static final String ID_SAMPLE_COUNT = "sample.count";  //javax.swing.JComboBox
         public static final String ID_SAMPLE_RATE = "sample.rate";  //javax.swing.JComboBox
         public static final String ID_SIMULATE_BUTTON = "simulate.button";  //javax.swing.JButton
         public static final String ID_TRACES = "traces";  //javax.swing.JPanel
     }
 
+    private final InferoLog inferoLog;
     private final RawSample rawSample;
+    private final TraceModel traceModel;
     private final LogicAnalyzer logicAnalyzer;
     private final JComboBox sampleCount;
     private final JComboBox sampleRate;
+
+    private final JLabel zoom;
+
+    private final JLabel decimal;
+    private final JLabel hex;
+    private final JLabel octal;
+    private final JLabel binary;
+
+    private final JSlider zoomSlider;
+    private final JScrollBar timelineScrollbar;
 
     // -----------------------------------------------------------------------
     // Initialization
     // -----------------------------------------------------------------------
 
     @Inject
-    public MainView(ChannelImageCreator imageCreator, LogicAnalyzer logicAnalyzer, RawSample rawSample) {
+    public MainView(ChannelImageCreator imageCreator, InferoLog inferoLog, RawSample rawSample, TraceModel traceModel, LogicAnalyzer logicAnalyzer) {
         super("MainView.jfrm");
+        this.inferoLog = inferoLog;
         this.rawSample = rawSample;
+        this.traceModel = traceModel;
         this.logicAnalyzer = logicAnalyzer;
+
         sampleCount = getComboBox(ID_SAMPLE_COUNT);
         sampleRate = getComboBox(ID_SAMPLE_RATE);
 
+        zoom = getLabel(ID_ZOOM);
+
+        decimal = getLabel(ID_VALUE_DECIMAL);
+        hex = getLabel(ID_VALUE_HEX);
+        octal = getLabel(ID_VALUE_OCTAL);
+        binary = getLabel(ID_VALUE_BINARY);
+
+        zoomSlider = (JSlider) getComponentByName(ID_ZOOM_SLIDER);
+        timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
+
         initializeHeader();
-        initializeChannels(imageCreator);
+        initializeChannels(imageCreator, traceModel);
+        initializeSliders();
+        initializeStatusPanel(traceModel);
+        initializeLog();
     }
 
     private void initializeHeader() {
         DefaultComboBoxModel sampleCountModel = (DefaultComboBoxModel) sampleCount.getModel();
-        for (CleverInteger i : logicAnalyzer.sampleCounts) {
+        for (FormattedInteger i : logicAnalyzer.sampleCounts) {
             sampleCountModel.addElement(i);
         }
-        sampleCount.setRenderer(new CleverIntegerListCellRenderer(" samples"));
+        sampleCount.setRenderer(new FormattedNumberListCellRenderer(" samples"));
 
         DefaultComboBoxModel sampleRateModel = (DefaultComboBoxModel) sampleRate.getModel();
-        for (CleverInteger i : logicAnalyzer.sampleRates) {
+        for (FormattedInteger i : logicAnalyzer.sampleRates) {
             sampleRateModel.addElement(i);
         }
-        sampleRate.setRenderer(new CleverIntegerListCellRenderer("Hz"));
+        sampleRate.setRenderer(new FormattedNumberListCellRenderer("Hz"));
 
         getButton(ID_SIMULATE_BUTTON).addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -71,7 +107,7 @@ public class MainView extends FormPanel {
         });
     }
 
-    private void initializeChannels(ChannelImageCreator imageCreator) {
+    private void initializeChannels(ChannelImageCreator imageCreator, TraceModel traceModel) {
         FormAccessor topForm = getFormAccessor();
         FormAccessor tracesForm = getFormAccessor(ID_TRACES);
 
@@ -85,7 +121,7 @@ public class MainView extends FormPanel {
             }
             topForm.replaceBean(c, channelConfiguration);
 
-            ChannelTracePanel channelTrace = new ChannelTracePanel(imageCreator, channel, rawSample);
+            ChannelTracePanel channelTrace = new ChannelTracePanel(imageCreator, channel, rawSample, traceModel);
             c = tracesForm.getLabel("channel." + channel.index + ".trace");
             if (c == null) {
                 throw new RuntimeException("No such channel: 'channel." + channel.index + ".trace'.");
@@ -94,17 +130,89 @@ public class MainView extends FormPanel {
         }
     }
 
+    private void initializeSliders() {
+        zoomSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                onZoomChanged(zoom, zoomSlider);
+            }
+        });
+
+        FormAccessor topForm = getFormAccessor();
+
+        topForm.replaceBean(ID_TIME_SCROLLBAR, timelineScrollbar);
+        
+        timelineScrollbar.addAdjustmentListener(new AdjustmentListener() {
+            public void adjustmentValueChanged(AdjustmentEvent e) {
+                onTimelineChanged();
+            }
+        });
+    }
+
+    private void initializeStatusPanel(final TraceModel traceModel) {
+        final JLabel time = getLabel(ID_TIME);
+
+        onSampleInvalidated();
+
+        traceModel.addPropertyChangeListener(MOUSE_POSITION, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (rawSample.isValid()) {
+                    time.setText(nanoTimeFormattingOf(traceModel.getTimeInNanoSeconds()).text);
+                }
+            }
+        });
+    }
+
+    private void initializeLog() {
+
+        getFormAccessor(ID_LOG_FORM).
+                getTable(ID_LOG_TABLE).
+                setModel(new InferoLogTableModel(inferoLog));
+
+        getButton(ID_CLEAR_BUTTON).addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                inferoLog.clear();
+            }
+        });
+    }
+
     // -----------------------------------------------------------------------
     // Events Handlers
     // -----------------------------------------------------------------------
 
+    private void onSampleInvalidated() {
+        zoom.setText("-");
+
+        decimal.setText("-");
+        hex.setText("-");
+        octal.setText("-");
+        binary.setText("-");
+        binary.setText("-");
+
+        zoomSlider.setEnabled(false);
+        timelineScrollbar.setEnabled(false);
+    }
+
     private void onSimulateButtonClicked() {
-        byte[] samples = new byte[((CleverInteger) sampleCount.getSelectedItem()).numeric];
+        byte[] samples = new byte[((FormattedInteger) sampleCount.getSelectedItem()).numeric];
 
         for (int i = 0, samplesLength = samples.length; i < samplesLength; i++) {
             samples[i] = (byte) (i & 0xff);
         }
 
-        rawSample.setSample(samples);
+        int samplesPerSecond = ((FormattedInteger) sampleRate.getSelectedItem()).numeric;
+
+        rawSample.setSample(samples, samplesPerSecond);
+    }
+
+    private void onZoomChanged(JLabel zoom, JSlider zoomSlider) {
+        double currentZoom = ((double) zoomSlider.getValue()) / zoomSlider.getMaximum();
+        traceModel.setZoom(currentZoom);
+
+        if (rawSample.isValid()) {
+            zoom.setText(valueOf(currentZoom));
+        }
+    }
+
+    private void onTimelineChanged() {
     }
 }

@@ -1,22 +1,19 @@
 package infero.gui.domain;
 
-import com.google.inject.Singleton;
+import com.google.inject.*;
+import infero.util.*;
+import static infero.util.NumberFormats.*;
+import static java.util.Collections.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import static java.util.Collections.unmodifiableList;
-import static infero.gui.domain.CleverInteger.cleverInteger;
-
-/**
- */
 @Singleton
 public class LogicAnalyzer {
     public final List<Channel> channels;
 
-    public final List<CleverInteger> sampleRates;
+    public final List<FormattedInteger> sampleRates;
 
-    public final List<CleverInteger> sampleCounts;
+    public final List<FormattedInteger> sampleCounts;
 
     public LogicAnalyzer() {
         this.channels = unmodifiableList(new ArrayList<Channel>(){{
@@ -31,31 +28,31 @@ public class LogicAnalyzer {
         }});
 
         // TODO: This should be loaded after the GUI connects to the analyzer
-        this.sampleRates = unmodifiableList(new ArrayList<CleverInteger>() {{
-            add(cleverInteger(24000000));
-            add(cleverInteger(16000000));
-            add(cleverInteger(12000000));
-            add(cleverInteger(8000000));
-            add(cleverInteger(4000000));
-            add(cleverInteger(2000000));
-            add(cleverInteger(1000000));
-            add(cleverInteger(500000));
-            add(cleverInteger(250000));
-            add(cleverInteger(200000));
-            add(cleverInteger(100000));
-            add(cleverInteger(50000));
+        this.sampleRates = unmodifiableList(new ArrayList<FormattedInteger>() {{
+            add(siFormattingOf(24000000));
+            add(siFormattingOf(16000000));
+            add(siFormattingOf(12000000));
+            add(siFormattingOf(8000000));
+            add(siFormattingOf(4000000));
+            add(siFormattingOf(2000000));
+            add(siFormattingOf(1000000));
+            add(siFormattingOf(500000));
+            add(siFormattingOf(250000));
+            add(siFormattingOf(200000));
+            add(siFormattingOf(100000));
+            add(siFormattingOf(50000));
         }});
 
-        this.sampleCounts = unmodifiableList(new ArrayList<CleverInteger>() {{
-            add(cleverInteger(1000));
-            add(cleverInteger(1000000));
-            add(cleverInteger(10000000));
-            add(cleverInteger(25000000));
-            add(cleverInteger(50000000));
-            add(cleverInteger(100000000));
-            add(cleverInteger(250000000));
-            add(cleverInteger(500000000));
-            add(cleverInteger(1000000000));
+        this.sampleCounts = unmodifiableList(new ArrayList<FormattedInteger>() {{
+            add(siFormattingOf(1000));
+            add(siFormattingOf(1000000));
+            add(siFormattingOf(10000000));
+            add(siFormattingOf(25000000));
+            add(siFormattingOf(50000000));
+            add(siFormattingOf(100000000));
+            add(siFormattingOf(250000000));
+            add(siFormattingOf(500000000));
+            add(siFormattingOf(1000000000));
         }});
     }
 }

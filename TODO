@@ -7,3 +7,8 @@ o Look into how tabbing around in the GUI work. It should be an
 
 o Look into shortcut handling. Should be possible to zoom and scroll
   in time with the keyboard.
+
+o Save the state of the windows when changed and reload on start.
+
+o Handle the condition when the GUI is wider than the number of samples.
+  Either extrapolate, or just cut the rendering.

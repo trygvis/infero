@@ -2,14 +2,17 @@
 
 set -x
 set -e
-rm -rf target/tmp
-mkdir target/tmp
-cd target/tmp
 
-wget --no-check-certificate https://abeille.dev.java.net/files/documents/2703/16951/formsdesigner2_0.zip
-unzip formsdesigner2_0.zip
+rm -rf target/tmp
+mkdir -p target/tmp
+
+rm -rf abeilleforms
+wget -O target/formsdesigner2_0.zip --no-check-certificate https://abeille.dev.java.net/files/documents/2703/16951/formsdesigner2_0.zip
+unzip target/formsdesigner2_0.zip
 
 mvn install:install-file -Dfile=abeilleforms/formsrt.jar -DgeneratePom -Dpackaging=jar -DgroupId=net.java.dev.abeille -DartifactId=formsrt -Dversion=2.0
+
+cd target/tmp
 
 releases="http://kenai.com/projects/guts/sources/guts-maven-repository/content/releases"
 snapshots="http://kenai.com/projects/guts/sources/guts-maven-repository/content/snapshots"

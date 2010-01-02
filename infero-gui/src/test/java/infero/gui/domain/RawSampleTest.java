@@ -16,7 +16,7 @@ public class RawSampleTest {
         }
 
         rawSample = new RawSample();
-        rawSample.setSample(values);
+        rawSample.setSample(values, 1000);
     }
 
     @Test
