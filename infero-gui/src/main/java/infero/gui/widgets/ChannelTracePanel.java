@@ -47,13 +47,6 @@ public class ChannelTracePanel extends JPanel {
 
         repaintCounter++;
 
-        if (!rawSample.isValid()) {
-            graphics.drawLine(0, 0, getWidth(), getHeight());
-            graphics.drawLine(0, getHeight(), getWidth(), 0);
-
-            return;
-        }
-
         // -----------------------------------------------------------------------
         // Clear the area
         // -----------------------------------------------------------------------
@@ -61,6 +54,10 @@ public class ChannelTracePanel extends JPanel {
         lap = lap.lap("clear existing image");
         graphics.setColor(getBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
+
+        if (!rawSample.isValid()) {
+            return;
+        }
 
         // -----------------------------------------------------------------------
         //

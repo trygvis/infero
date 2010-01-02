@@ -12,15 +12,11 @@ import static infero.gui.domain.Channel.Properties.*;
 /**
  */
 public class ChannelConfigurationView extends FormPanel {
-    
-    private final Channel channel;
+
     private final JTextField channelName;
-    private final JComboBox triggerA;
 
     public ChannelConfigurationView(Channel channel) {
         super("ChannelConfigurationView.jfrm");
-
-        this.channel = channel;
 
         getLabel("label").setText(channel.indexText);
         channelName = getTextField("name");
@@ -31,7 +27,5 @@ public class ChannelConfigurationView extends FormPanel {
                 channelName.setText(evt.getNewValue().toString());
             }
         });
-
-        triggerA = getComboBox("triggerA");
     }
 }

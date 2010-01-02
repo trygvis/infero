@@ -30,10 +30,6 @@ public class RawSample extends AbstractDomainObject<Properties> {
      */
     private double zoom = 1;
 
-    public RawSample() {
-        System.out.println("RawSample.RawSample");
-    }
-
     public void setSample(byte[] values) {
         valid = true;
         timestamp = System.currentTimeMillis();

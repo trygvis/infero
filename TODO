@@ -1,0 +1,9 @@
+o Look into how the resizing of the panels work. Currently it is
+  possible to shrink the panels way too much. Should require the min
+  size of the trace panel to be around 200px.
+
+o Look into how tabbing around in the GUI work. It should be an
+  easy and natural way to move the focus around.
+
+o Look into shortcut handling. Should be possible to zoom and scroll
+  in time with the keyboard.
