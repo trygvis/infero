@@ -6,7 +6,6 @@ import com.jeta.forms.gui.form.*;
 import infero.gui.action.*;
 import infero.gui.domain.*;
 import static infero.gui.domain.TraceModel.Properties.*;
-import infero.gui.domain.services.*;
 import static infero.gui.widgets.MainView.Names.*;
 import infero.gui.widgets.util.*;
 import infero.util.*;
@@ -43,7 +42,6 @@ public class MainView extends FormPanel {
         public static final String ID_TRACES = "traces";  //javax.swing.JPanel
     }
 
-    private final InferoLog inferoLog;
     private final RawSample rawSample;
     private final TraceModel traceModel;
     private final LogicAnalyzer logicAnalyzer;
@@ -69,11 +67,14 @@ public class MainView extends FormPanel {
     // -----------------------------------------------------------------------
 
     @Inject
-    public MainView(ChannelImageCreator imageCreator, InferoLog inferoLog, RawSample rawSample, TraceModel traceModel,
-                    LogicAnalyzer logicAnalyzer, InferoLogTableModel inferoLogTableModel,
-                    LogicAnalyzerActions logicAnalyzerActions, infero.gui.action.LogActions logActions) {
+    public MainView(RawSample rawSample,
+                    TraceModel traceModel,
+                    LogicAnalyzer logicAnalyzer,
+                    InferoLogTableModel inferoLogTableModel,
+                    LogicAnalyzerActions logicAnalyzerActions,
+                    LogActions logActions,
+                    ChannelTracePanelFactory channelTracePanelProviderFactory) {
         super("MainView.jfrm");
-        this.inferoLog = inferoLog;
         this.rawSample = rawSample;
         this.traceModel = traceModel;
         this.logicAnalyzer = logicAnalyzer;
@@ -95,7 +96,7 @@ public class MainView extends FormPanel {
         logTable = getFormAccessor(ID_LOG_FORM).getTable(ID_LOG_TABLE);
 
         initializeHeader(logicAnalyzerActions.simulate);
-        initializeChannels(imageCreator, traceModel);
+        initializeChannels(channelTracePanelProviderFactory);
         initializeSliders();
         initializeStatusPanel(traceModel);
         initializeLog(logActions.clearLogEntriesAction);
@@ -117,7 +118,7 @@ public class MainView extends FormPanel {
         getButton(ID_SIMULATE_BUTTON).setAction(simulateAction.action());
     }
 
-    private void initializeChannels(ChannelImageCreator imageCreator, TraceModel traceModel) {
+    private void initializeChannels(ChannelTracePanelFactory channelTracePanelProvider) {
         FormAccessor topForm = getFormAccessor();
         FormAccessor tracesForm = getFormAccessor(ID_TRACES);
 
@@ -131,7 +132,7 @@ public class MainView extends FormPanel {
             }
             topForm.replaceBean(c, channelConfiguration);
 
-            ChannelTracePanel channelTrace = new ChannelTracePanel(imageCreator, channel, inferoLog, rawSample, traceModel);
+            ChannelTracePanel channelTrace = channelTracePanelProvider.create(channel);
             c = tracesForm.getLabel("channel." + channel.index + ".trace");
             if (c == null) {
                 throw new RuntimeException("No such channel: 'channel." + channel.index + ".trace'.");

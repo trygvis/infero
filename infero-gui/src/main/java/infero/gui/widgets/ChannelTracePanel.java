@@ -1,7 +1,8 @@
 package infero.gui.widgets;
 
+import com.google.inject.*;
+import com.google.inject.assistedinject.*;
 import infero.gui.domain.*;
-import static infero.gui.domain.InferoLogEntry.info;
 import static infero.gui.domain.RawSample.Properties.*;
 import infero.gui.domain.services.*;
 import infero.gui.domain.services.ChannelImageCreator.*;
@@ -21,12 +22,15 @@ import java.beans.*;
  * 2) resizes. For this it might be possible to store the lines used to render the graphs and just redraw
  */
 public class ChannelTracePanel extends JPanel {
+    private final InferoLog log;
     private final ChannelImageCreator imageCreator;
     private final Channel channel;
     private final RawSample rawSample;
     private final TraceModel traceModel;
 
-    public ChannelTracePanel(ChannelImageCreator imageCreator, Channel channel, final InferoLog inferoLog, final RawSample rawSample, final TraceModel traceModel) {
+    @Inject
+    public ChannelTracePanel(InferoLog log, ChannelImageCreator imageCreator, @Assisted Channel channel, final InferoLog inferoLog, final RawSample rawSample, final TraceModel traceModel) {
+        this.log = log;
         this.imageCreator = imageCreator;
         this.channel = channel;
         this.rawSample = rawSample;
@@ -45,7 +49,6 @@ public class ChannelTracePanel extends JPanel {
 
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseMoved(MouseEvent e) {
-                inferoLog.logEntry(info(String.format("mouse: x=%d, y=%d", e.getX(), e.getY())));
                 traceModel.setMousePosition(e.getPoint());
             }
         });
@@ -112,6 +115,10 @@ public class ChannelTracePanel extends JPanel {
             last = pixel;
         }
 
-        lap.println(System.err);
+        log.logEntry(entry(lap));
+    }
+
+    private InferoLogEntry entry(Lap lap) {
+        return InferoLogEntry.info(lap.toString());
     }
 }

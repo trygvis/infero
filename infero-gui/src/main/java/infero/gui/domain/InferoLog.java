@@ -16,6 +16,15 @@ public class InferoLog {
         model.logEntry(entry);
     }
 
+    /**
+     * TODO: Instead of this there should be a way to have multi-line log entries.
+     */
+    public void logEntry(InferoLogEntry ... entries) {
+        for (InferoLogEntry entry : entries) {
+            model.logEntry(entry);
+        }
+    }
+
     public void clear() {
         model.clear();
     }

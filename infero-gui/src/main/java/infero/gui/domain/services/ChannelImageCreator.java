@@ -25,9 +25,6 @@ public class ChannelImageCreator {
         byte[] values = rawSample.getValues();
         byte filter = (byte) (1 << channel.index);
 
-        System.out.println("rawSample.getCount() = " + rawSample.getCount());
-        System.out.println("width  = " + width);
-        System.out.println("filter = " + toBinaryString(0xff & filter));
         Chunk[] chunks = rawSample.createChunks(0, rawSample.getCount() - 1, width);
         for (int i = 0, chunksLength = chunks.length; i < chunksLength; i++) {
             Chunk chunk = chunks[i];

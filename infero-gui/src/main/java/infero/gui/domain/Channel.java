@@ -4,8 +4,6 @@ import infero.gui.domain.Channel.Properties;
 
 import static infero.gui.domain.Channel.Properties.NAME;
 
-/**
- */
 public class Channel extends AbstractDomainObject<Properties> {
     public final int index;
     public final String indexText;
