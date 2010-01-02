@@ -5,8 +5,9 @@ import com.google.inject.Singleton;
 import com.jeta.forms.components.panel.FormPanel;
 import com.jeta.forms.gui.form.FormAccessor;
 import infero.gui.domain.Channel;
-import infero.gui.domain.CurrentSample;
+import infero.gui.domain.RawSample;
 import infero.gui.domain.LogicAnalyzer;
+import infero.gui.domain.services.ChannelImageCreator;
 
 import javax.swing.*;
 
@@ -17,7 +18,7 @@ public class MainView extends FormPanel {
     public static final String ID_HEADER = "header";  //com.jeta.forms.components.label.JETALabel
 
     @Inject
-    public MainView(MainViewHeader mainViewHeader, LogicAnalyzer logicAnalyzer, CurrentSample currentSample) {
+    public MainView(ChannelImageCreator imageCreator, MainViewHeader mainViewHeader, LogicAnalyzer logicAnalyzer, RawSample rawSample) {
         super("MainView.jfrm");
 
         FormAccessor accessor = getFormAccessor("top");
@@ -34,7 +35,7 @@ public class MainView extends FormPanel {
             }
             accessor.replaceBean(c, channelConfiguration);
 
-            ChannelTracePanel channelTrace = new ChannelTracePanel(channel, currentSample);
+            ChannelTracePanel channelTrace = new ChannelTracePanel(imageCreator, channel, rawSample);
             c = getLabel("channel." + channel.index + ".trace");
             if (c == null) {
                 throw new RuntimeException("No such channel: 'channel." + channel.index + ".trace'.");

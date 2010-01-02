@@ -1,37 +1,38 @@
 package infero.gui.widgets;
 
-import infero.gui.domain.Channel;
-import infero.gui.domain.CurrentSample;
+import infero.gui.domain.*;
+import static infero.gui.domain.RawSample.Properties.*;
+import infero.gui.domain.services.*;
+import infero.gui.domain.services.ChannelImageCreator.*;
+import infero.util.*;
+import static infero.util.Lap.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
-import static infero.gui.domain.CurrentSample.Properties.VALUES;
-import static infero.gui.domain.CurrentSample.Properties.ZOOM;
+import java.beans.*;
 
 /**
  * TODO: As an optimization the GUI should buffer the last rendered image.
- *
- * This will prevent 
- *
+ * <p/>
+ * This will prevent lots of calculation to render the graph. The image should be be invalidated on:
+ * 1) new samples
+ * 2) resizes. For this it might be possible to store the lines used to render the graphs and just redraw
  */
 public class ChannelTracePanel extends JPanel {
+    private final ChannelImageCreator imageCreator;
     private final Channel channel;
-    private final CurrentSample currentSample;
+    private final RawSample rawSample;
 
-//    private long timestampOfLastPaintedSample;
-
-    public ChannelTracePanel(Channel channel, CurrentSample currentSample) {
+    public ChannelTracePanel(ChannelImageCreator imageCreator, Channel channel, RawSample rawSample) {
+        this.imageCreator = imageCreator;
         this.channel = channel;
-        this.currentSample = currentSample;
-        currentSample.addPropertyChangeListener(VALUES, new PropertyChangeListener() {
+        this.rawSample = rawSample;
+        rawSample.addPropertyChangeListener(VALUES, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 ChannelTracePanel.this.repaint();
             }
         });
-        currentSample.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
+        rawSample.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 ChannelTracePanel.this.repaint();
             }
@@ -41,26 +42,23 @@ public class ChannelTracePanel extends JPanel {
     int repaintCounter;
 
     public void paint(Graphics g) {
+        Lap lap = startTimer("paint()");
         Graphics2D graphics = (Graphics2D) g;
 
         repaintCounter++;
-        if (!currentSample.isValid()) {
+
+        if (!rawSample.isValid()) {
             graphics.drawLine(0, 0, getWidth(), getHeight());
             graphics.drawLine(0, getHeight(), getWidth(), 0);
 
             return;
         }
 
-        // This was not smart enough
-//        if (timestampOfLastPaintedSample == currentSample.getTimestamp()) {
-//            System.out.println("ChannelTracePanel.paint. Skipping, same sample");
-//            return;
-//        }
-
         // -----------------------------------------------------------------------
         // Clear the area
         // -----------------------------------------------------------------------
 
+        lap = lap.lap("clear existing image");
         graphics.setColor(getBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
@@ -70,70 +68,41 @@ public class ChannelTracePanel extends JPanel {
 
         graphics.setColor(getForeground());
 
-        byte[] values = currentSample.getValues();
-        int valuesLength = currentSample.getValues().length;
-
-        double zoom = currentSample.getZoom();
+        double zoom = rawSample.getZoom();
         int width = getWidth();
         int highY = 1;
         int lowY = getHeight() - 2;
 
-        byte filter = (byte) (1 << channel.index);
+        lap = lap.lap("create image");
+        ChannelPixel[] pixels = imageCreator.createImage(channel, rawSample, width);
 
-        boolean last = (values[0] & filter) == 1;
-        int lastX = 0;
-        int lastY = last ? highY : lowY;
+        lap = lap.lap("render pixels");
 
-//        System.out.println("********************************************************");
-//        System.out.println("********************************************************");
-//        System.out.println("********************************************************");
-//        System.out.println("********************************************************");
-//        System.out.println("********************************************************");
-//        System.out.println("********************************************************");
-//        System.out.println("ChannelTracePanel.paint: valid=" + currentSample.isValid() + ", repaintCounter=" + repaintCounter);
-//        System.out.println("channel.index = " + channel.index);
-//        System.out.println("zoom = " + zoom);
-//        System.out.println("width = " + width);
-//        System.out.println("valuesLength = " + valuesLength);
-//        System.out.println("filter = " + filter);
-        for (int i = 1; i < valuesLength; i++) {
-            byte b = currentSample.getValues()[i];
-            boolean value = (b & filter) > 0;
-
-            int x = (int)(((double) i) / valuesLength * zoom * width);
-            int y = value ? highY : lowY;
-
-//            System.out.format("#%d, x=%09f, y=%d, value=%d, state=%s", i, x, y,b,  value ? "value" : "low");
-//            System.out.println();
-
-            if(last == value) {
-
-                graphics.drawLine(lastX, lastY, x, y);
+        ChannelPixel last = pixels[0];
+        for (int x = 0, pixelsLength = pixels.length; x < pixelsLength; x++) {
+            ChannelPixel pixel = pixels[x];
+            switch (pixel) {
+                case HIGH:
+                    if (last == ChannelPixel.LOW) {
+                        graphics.drawLine(x, lowY, x, highY);
+                    } else {
+                        graphics.drawLine(x, highY, x, highY);
+                    }
+                    break;
+                case LOW:
+                    if (last == ChannelPixel.HIGH) {
+                        graphics.drawLine(x, highY, x, lowY);
+                    } else {
+                        graphics.drawLine(x, lowY, x, lowY);
+                    }
+                    break;
+                case BOTH:
+                    graphics.drawLine(x, highY, x, lowY);
+                    break;
             }
-            else {
-                if(last) {
-                    //
-                    // ..-|
-                    //    |-------. .
-                    //
-
-                    graphics.drawLine(lastX, highY, lastX, lowY);
-                    graphics.drawLine(lastX, lowY, x, lowY);
-                }
-                else {
-                    //
-                    //    |-------. .
-                    // ..-|
-                    //
-
-                    graphics.drawLine(lastX, highY, lastX, lowY);
-                    graphics.drawLine(lastX, highY, x, highY);
-                }
-            }
-
-            lastX = x;
-            lastY = y;
-            last = value;
+            last = pixel;
         }
+
+        lap.println(System.err);
     }
 }

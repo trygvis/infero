@@ -10,8 +10,6 @@ unzip formsdesigner2_0.zip
 
 mvn install:install-file -Dfile=abeilleforms/formsrt.jar -DgeneratePom -Dpackaging=jar -DgroupId=net.java.dev.abeille -DartifactId=formsrt -Dversion=2.0
 
-exit
-
 releases="http://kenai.com/projects/guts/sources/guts-maven-repository/content/releases"
 snapshots="http://kenai.com/projects/guts/sources/guts-maven-repository/content/snapshots"
 
@@ -23,7 +21,7 @@ mvn install:install-file -Dfile=AppFramework-$version.jar -DgroupId=org.jdesktop
 version="0.1-20091123.145632-6"
 wget -q "$snapshots/net/guts/guts-parent/0.1-SNAPSHOT/guts-parent-$version.pom"
 
-mvn install:install-file -Dfile=guts-parent-$version.pom -DgroupId=net.guts -DartifactId=guts-parent -Dversion=0.1-SNAPSHoT -Dpackaging=pom
+mvn install:install-file -Dfile=guts-parent-$version.pom -DgroupId=net.guts -DartifactId=guts-parent -Dversion=0.1-SNAPSHOT -Dpackaging=pom
 
 version="0.1-20091123.145704-7"
 wget -q "$snapshots/net/guts/guts-common/0.1-SNAPSHOT/guts-common-$version.jar"

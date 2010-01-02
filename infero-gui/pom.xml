@@ -1,8 +1,12 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>infero</groupId>
+  <parent>
+    <groupId>infero</groupId>
+    <artifactId>infero</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
   <artifactId>infero-gui</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <name>Infero :: GUI</name>
   <dependencies>
     <dependency>
       <groupId>ch.qos.logback</groupId>

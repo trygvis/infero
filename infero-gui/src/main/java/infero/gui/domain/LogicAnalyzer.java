@@ -47,7 +47,7 @@ public class LogicAnalyzer {
         }});
 
         this.sampleCounts = unmodifiableList(new ArrayList<CleverInteger>() {{
-            add(cleverInteger(10));
+            add(cleverInteger(1000));
             add(cleverInteger(1000000));
             add(cleverInteger(10000000));
             add(cleverInteger(25000000));
