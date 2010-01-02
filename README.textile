@@ -1,4 +1,4 @@
-h1. About
+h2. About
 
 Infero is a graphical user interface for Logic Analyzers.
 
@@ -6,7 +6,7 @@ It currently only support saleae-logic-libusb [1] as the underlying
 Logic Analyzer. Support for other logic analyzers will have to be
 added by others.
 
-h1. How to build
+h2. How to build
 
 First, make sure you thave the required dependencies installed.
 Maven will let you know if you don't.
@@ -25,13 +25,13 @@ Infero depends on an unreleased version of the "GUTS - Guice Utilities
 Maven repository that can be used to download snapshots so you'll
 have to build it yourself.
 
-h2. Installing missing dependencies
+h3. Installing missing dependencies
 
 To install some of the dependencies, simply run @./install-deps.sh@.
 A sane unix environment is assumed. If not, open the script and run
 the equalient commands for your environment.
 
-h2. Building GUTS
+h3. Building GUTS
 
 pre. svn co https://svn.kenai.com/svn/guts~guts-events/trunk guts~guts-events
 cd guts~guts-events
@@ -46,4 +46,4 @@ pre. mvn -f infero-gui/pom.xml install exec:java -Dmaven.test.skip -Dexec.mainCl
 
 If you really just want to run it remove the @install@ argument.
 
-[1]: http://github.com/keesj/saleae-logic-libusb
+# http://github.com/keesj/saleae-logic-libusb
