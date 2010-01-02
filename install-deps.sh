@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -x
 set -e
 rm -rf target/tmp
@@ -17,6 +18,10 @@ version="1.03-patch-jfpoilpret"
 wget -q "$releases/org/jdesktop/application/AppFramework/$version/AppFramework-$version.jar"
 
 mvn install:install-file -Dfile=AppFramework-$version.jar -DgroupId=org.jdesktop.application -DartifactId=AppFramework -Dversion=$version -Dpackaging=jar -DgeneratePom
+
+# GUTS has to be built from SVN so just stop here.
+echo "Remeber to build GUTS from Subverion too!"
+exit
 
 version="0.1-20091123.145632-6"
 wget -q "$snapshots/net/guts/guts-parent/0.1-SNAPSHOT/guts-parent-$version.pom"
