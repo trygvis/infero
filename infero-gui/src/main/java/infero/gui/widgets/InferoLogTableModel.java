@@ -1,27 +1,26 @@
 package infero.gui.widgets;
 
+import com.google.inject.*;
 import infero.gui.domain.*;
 
 import javax.swing.table.*;
+import java.util.*;
 
-/**
-* @author <a href="mailto:trygvis@java.no">Trygve Laugst&oslash;l</a>
-* @version $Id$
-*/
-class InferoLogTableModel extends AbstractTableModel {
-    private final String[] columnNames = new String[] {
+@Singleton
+public class InferoLogTableModel extends AbstractTableModel {
+    private final String[] columnNames = new String[]{
             "Time",
             "Entry"
     };
 
-    private final InferoLog inferoLog;
+    private final List<InferoLogEntry> entries = new ArrayList<InferoLogEntry>();
 
-    public InferoLogTableModel(InferoLog inferoLog) {
-        this.inferoLog = inferoLog;
-    }
+    // -----------------------------------------------------------------------
+    // AbstractTableModel Implementation
+    // -----------------------------------------------------------------------
 
     public int getRowCount() {
-        return inferoLog.entries.size();
+        return entries.size();
     }
 
     public int getColumnCount() {
@@ -40,11 +39,27 @@ class InferoLogTableModel extends AbstractTableModel {
     }
 
     public Object getValueAt(int rowIndex, int columnIndex) {
-        InferoLogEntry logEntry = inferoLog.entries.get(rowIndex);
+        InferoLogEntry logEntry = entries.get(rowIndex);
 
-        if(rowIndex == 0) {
+        if (columnIndex == 0) {
             return logEntry.timeInMilliseconds;
         }
         return logEntry.text;
+    }
+
+    // -----------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------
+
+    public void logEntry(InferoLogEntry entry) {
+        entries.add(entry);
+
+        super.fireTableRowsInserted(entries.size(), entries.size());
+    }
+
+    public void clear() {
+        int size = entries.size();
+        entries.clear();
+        super.fireTableRowsDeleted(0, size - 1);
     }
 }

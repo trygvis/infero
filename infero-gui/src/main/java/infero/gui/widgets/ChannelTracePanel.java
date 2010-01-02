@@ -1,6 +1,7 @@
 package infero.gui.widgets;
 
 import infero.gui.domain.*;
+import static infero.gui.domain.InferoLogEntry.info;
 import static infero.gui.domain.RawSample.Properties.*;
 import infero.gui.domain.services.*;
 import infero.gui.domain.services.ChannelImageCreator.*;
@@ -25,7 +26,7 @@ public class ChannelTracePanel extends JPanel {
     private final RawSample rawSample;
     private final TraceModel traceModel;
 
-    public ChannelTracePanel(ChannelImageCreator imageCreator, Channel channel, final RawSample rawSample, final TraceModel traceModel) {
+    public ChannelTracePanel(ChannelImageCreator imageCreator, Channel channel, final InferoLog inferoLog, final RawSample rawSample, final TraceModel traceModel) {
         this.imageCreator = imageCreator;
         this.channel = channel;
         this.rawSample = rawSample;
@@ -44,7 +45,7 @@ public class ChannelTracePanel extends JPanel {
 
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseMoved(MouseEvent e) {
-                System.out.println(String.format("mouse: x=%d, y=%d", e.getX(), e.getY()));
+                inferoLog.logEntry(info(String.format("mouse: x=%d, y=%d", e.getX(), e.getY())));
                 traceModel.setMousePosition(e.getPoint());
             }
         });

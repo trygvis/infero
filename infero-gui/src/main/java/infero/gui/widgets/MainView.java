@@ -3,6 +3,7 @@ package infero.gui.widgets;
 import com.google.inject.*;
 import com.jeta.forms.components.panel.*;
 import com.jeta.forms.gui.form.*;
+import infero.gui.action.*;
 import infero.gui.domain.*;
 import static infero.gui.domain.TraceModel.Properties.*;
 import infero.gui.domain.services.*;
@@ -11,9 +12,13 @@ import infero.gui.widgets.util.*;
 import infero.util.*;
 import static infero.util.NumberFormats.*;
 import static java.lang.String.valueOf;
+import static javax.swing.JTable.*;
+import net.guts.gui.action.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.table.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
 
@@ -42,6 +47,8 @@ public class MainView extends FormPanel {
     private final RawSample rawSample;
     private final TraceModel traceModel;
     private final LogicAnalyzer logicAnalyzer;
+    private final InferoLogTableModel inferoLogTableModel;
+
     private final JComboBox sampleCount;
     private final JComboBox sampleRate;
 
@@ -55,17 +62,22 @@ public class MainView extends FormPanel {
     private final JSlider zoomSlider;
     private final JScrollBar timelineScrollbar;
 
+    private final JTable logTable;
+
     // -----------------------------------------------------------------------
     // Initialization
     // -----------------------------------------------------------------------
 
     @Inject
-    public MainView(ChannelImageCreator imageCreator, InferoLog inferoLog, RawSample rawSample, TraceModel traceModel, LogicAnalyzer logicAnalyzer) {
+    public MainView(ChannelImageCreator imageCreator, InferoLog inferoLog, RawSample rawSample, TraceModel traceModel,
+                    LogicAnalyzer logicAnalyzer, InferoLogTableModel inferoLogTableModel,
+                    LogicAnalyzerActions logicAnalyzerActions, infero.gui.action.LogActions logActions) {
         super("MainView.jfrm");
         this.inferoLog = inferoLog;
         this.rawSample = rawSample;
         this.traceModel = traceModel;
         this.logicAnalyzer = logicAnalyzer;
+        this.inferoLogTableModel = inferoLogTableModel;
 
         sampleCount = getComboBox(ID_SAMPLE_COUNT);
         sampleRate = getComboBox(ID_SAMPLE_RATE);
@@ -80,14 +92,16 @@ public class MainView extends FormPanel {
         zoomSlider = (JSlider) getComponentByName(ID_ZOOM_SLIDER);
         timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
 
-        initializeHeader();
+        logTable = getFormAccessor(ID_LOG_FORM).getTable(ID_LOG_TABLE);
+
+        initializeHeader(logicAnalyzerActions.simulate);
         initializeChannels(imageCreator, traceModel);
         initializeSliders();
         initializeStatusPanel(traceModel);
-        initializeLog();
+        initializeLog(logActions.clearLogEntriesAction);
     }
 
-    private void initializeHeader() {
+    private void initializeHeader(GutsAction simulateAction) {
         DefaultComboBoxModel sampleCountModel = (DefaultComboBoxModel) sampleCount.getModel();
         for (FormattedInteger i : logicAnalyzer.sampleCounts) {
             sampleCountModel.addElement(i);
@@ -100,11 +114,7 @@ public class MainView extends FormPanel {
         }
         sampleRate.setRenderer(new FormattedNumberListCellRenderer("Hz"));
 
-        getButton(ID_SIMULATE_BUTTON).addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onSimulateButtonClicked();
-            }
-        });
+        getButton(ID_SIMULATE_BUTTON).setAction(simulateAction.action());
     }
 
     private void initializeChannels(ChannelImageCreator imageCreator, TraceModel traceModel) {
@@ -121,7 +131,7 @@ public class MainView extends FormPanel {
             }
             topForm.replaceBean(c, channelConfiguration);
 
-            ChannelTracePanel channelTrace = new ChannelTracePanel(imageCreator, channel, rawSample, traceModel);
+            ChannelTracePanel channelTrace = new ChannelTracePanel(imageCreator, channel, inferoLog, rawSample, traceModel);
             c = tracesForm.getLabel("channel." + channel.index + ".trace");
             if (c == null) {
                 throw new RuntimeException("No such channel: 'channel." + channel.index + ".trace'.");
@@ -140,7 +150,7 @@ public class MainView extends FormPanel {
         FormAccessor topForm = getFormAccessor();
 
         topForm.replaceBean(ID_TIME_SCROLLBAR, timelineScrollbar);
-        
+
         timelineScrollbar.addAdjustmentListener(new AdjustmentListener() {
             public void adjustmentValueChanged(AdjustmentEvent e) {
                 onTimelineChanged();
@@ -162,15 +172,21 @@ public class MainView extends FormPanel {
         });
     }
 
-    private void initializeLog() {
+    private void initializeLog(GutsAction clearLogEntriesAction) {
 
-        getFormAccessor(ID_LOG_FORM).
-                getTable(ID_LOG_TABLE).
-                setModel(new InferoLogTableModel(inferoLog));
+        logTable.setModel(inferoLogTableModel);
 
-        getButton(ID_CLEAR_BUTTON).addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                inferoLog.clear();
+        TableColumn timeColumn = logTable.getColumnModel().getColumn(0);
+        timeColumn.setPreferredWidth(100);
+        timeColumn.setResizable(false);
+
+        logTable.setAutoResizeMode(AUTO_RESIZE_LAST_COLUMN);
+
+        getButton(ID_CLEAR_BUTTON).setAction(clearLogEntriesAction.action());
+
+        inferoLogTableModel.addTableModelListener(new TableModelListener() {
+            public void tableChanged(TableModelEvent e) {
+                scrollToLastLogEntry();
             }
         });
     }
@@ -192,18 +208,6 @@ public class MainView extends FormPanel {
         timelineScrollbar.setEnabled(false);
     }
 
-    private void onSimulateButtonClicked() {
-        byte[] samples = new byte[((FormattedInteger) sampleCount.getSelectedItem()).numeric];
-
-        for (int i = 0, samplesLength = samples.length; i < samplesLength; i++) {
-            samples[i] = (byte) (i & 0xff);
-        }
-
-        int samplesPerSecond = ((FormattedInteger) sampleRate.getSelectedItem()).numeric;
-
-        rawSample.setSample(samples, samplesPerSecond);
-    }
-
     private void onZoomChanged(JLabel zoom, JSlider zoomSlider) {
         double currentZoom = ((double) zoomSlider.getValue()) / zoomSlider.getMaximum();
         traceModel.setZoom(currentZoom);
@@ -214,5 +218,28 @@ public class MainView extends FormPanel {
     }
 
     private void onTimelineChanged() {
+    }
+
+    // -----------------------------------------------------------------------
+    // Accessors
+    // -----------------------------------------------------------------------
+
+    public int getSelectedSampleCount() {
+        return ((FormattedInteger) sampleCount.getSelectedItem()).numeric;
+    }
+
+    public int getSelectedSampleRate() {
+        return ((FormattedInteger) sampleRate.getSelectedItem()).numeric;
+    }
+
+    /**
+     * This doesn't exactly work as advertised, it only scrolls to the second to last entry.
+     */
+    public void scrollToLastLogEntry() {
+        Dimension dimension = logTable.getSize();
+        int width = (int) dimension.getWidth();
+        int height = (int) dimension.getHeight();
+
+        logTable.scrollRectToVisible(new Rectangle(width, height, width, height));
     }
 }

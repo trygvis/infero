@@ -1,20 +1,18 @@
 package infero.gui;
 
-import com.google.inject.Inject;
+import com.google.inject.*;
+import infero.gui.action.*;
+import infero.gui.widgets.*;
 import static javax.swing.UIManager.*;
-import net.guts.gui.application.AppLifecycleStarter;
-import net.guts.gui.application.GutsApplicationActions;
-import net.guts.gui.application.WindowController;
-import net.guts.gui.application.WindowController.BoundsPolicy;
-import net.guts.gui.exit.ExitController;
-import net.guts.gui.menu.MenuFactory;
-import net.guts.gui.message.MessageFactory;
-import net.guts.gui.resource.ResourceInjector;
-import infero.gui.widgets.MainView;
+import net.guts.gui.application.*;
+import net.guts.gui.application.WindowController.*;
+import net.guts.gui.exit.*;
+import net.guts.gui.menu.*;
+import net.guts.gui.message.*;
+import net.guts.gui.resource.*;
 
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final WindowController windowController;
@@ -24,6 +22,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final ExitController exitController;
     private final GutsApplicationActions appActions;
     private final MainView mainView;
+    private final LogicAnalyzerActions logicAnalyzerActions;
 
     @Inject
     public InferoLifecycleStarter(WindowController windowController,
@@ -32,7 +31,8 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
                                   ResourceInjector injector,
                                   ExitController exitController,
                                   GutsApplicationActions appActions,
-                                  MainView mainView) {
+                                  MainView mainView,
+                                  LogicAnalyzerActions logicAnalyzerActions) {
         this.windowController = windowController;
         this.menuFactory = menuFactory;
         this.messageFactory = messageFactory;
@@ -40,6 +40,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
         this.exitController = exitController;
         this.appActions = appActions;
         this.mainView = mainView;
+        this.logicAnalyzerActions = logicAnalyzerActions;
     }
 
     public void startup(String[] args) {
@@ -57,10 +58,17 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
             e.printStackTrace();
         }
 
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(menuFactory.createMenu("menu.file", 
+                logicAnalyzerActions.simulate,
+                MenuFactory.ACTION_SEPARATOR,
+                appActions.quit()));
+
         JFrame mainFrame = new JFrame();
 
         mainFrame.setName("mainFrame");
         mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        mainFrame.setJMenuBar(menuBar);
         mainFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent arg0) {
