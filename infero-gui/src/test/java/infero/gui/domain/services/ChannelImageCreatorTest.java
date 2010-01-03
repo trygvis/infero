@@ -1,8 +1,8 @@
 package infero.gui.domain.services;
 
 import infero.gui.domain.Channel;
-import infero.gui.domain.RawSample;
-import infero.gui.domain.RawSample.Chunk;
+import infero.gui.domain.SampleBuffer;
+import infero.gui.domain.SampleBuffer.Chunk;
 import infero.gui.domain.services.ChannelImageCreator.ChannelPixel;
 import infero.util.Lap;
 import org.junit.Test;
@@ -23,18 +23,17 @@ public class ChannelImageCreatorTest {
 
         byte[] values = new byte[100];
         Arrays.fill(values, (byte)0xf0);
-        RawSample rawSample = new RawSample();
-        rawSample.setSample(values, 1000);
+        SampleBuffer sampleBuffer = new SampleBuffer(values, 1000);
 
-        Chunk[] chunks = rawSample.createChunks(0, rawSample.getCount() - 1, 10);
+        Chunk[] chunks = sampleBuffer.createChunks(0, sampleBuffer.size() - 1, 10);
 
         values[chunks[2].start] |= 1 << channel1.index;
 
         ChannelImageCreator imageCreator = new ChannelImageCreator();
 
-        ChannelPixel[] pixels0 = imageCreator.createImage(channel0, rawSample, 10);
-        ChannelPixel[] pixels1 = imageCreator.createImage(channel1, rawSample, 10);
-        ChannelPixel[] pixels7 = imageCreator.createImage(channel7, rawSample, 10);
+        ChannelPixel[] pixels0 = imageCreator.createImage(channel0, sampleBuffer, 10);
+        ChannelPixel[] pixels1 = imageCreator.createImage(channel1, sampleBuffer, 10);
+        ChannelPixel[] pixels7 = imageCreator.createImage(channel7, sampleBuffer, 10);
 
         assertEquals(10, pixels0.length);
 
@@ -67,15 +66,14 @@ public class ChannelImageCreatorTest {
 
         lap = lap.lap("memory fill");
         Arrays.fill(values, (byte)0xf0);
-        RawSample rawSample = new RawSample();
-        rawSample.setSample(values, 1000);
+        SampleBuffer sampleBuffer = new SampleBuffer(values, 1000);
 
         lap = lap.lap("Create chunks");
 
         ChannelImageCreator imageCreator = new ChannelImageCreator();
 
         lap = lap.lap("Create image");
-        ChannelPixel[] pixels0 = imageCreator.createImage(channel0, rawSample, 10);
+        ChannelPixel[] pixels0 = imageCreator.createImage(channel0, sampleBuffer, 10);
 
         assertEquals(10, pixels0.length);
 

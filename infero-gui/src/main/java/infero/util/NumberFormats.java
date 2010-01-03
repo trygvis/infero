@@ -1,6 +1,9 @@
 package infero.util;
 
-import static java.lang.String.*;
+import static java.lang.Math.*;
+import static java.text.NumberFormat.*;
+
+import java.text.*;
 
 public class NumberFormats {
 
@@ -9,7 +12,9 @@ public class NumberFormats {
     // -----------------------------------------------------------------------
 
     public static FormattedInteger siFormattingOf(int value) {
-        return new FormattedInteger(value, get(value, SiEnum.values()));
+        NumberFormat format = getIntegerInstance();
+        format.setMaximumFractionDigits(0);
+        return new FormattedInteger(value, get(value, SiEnum.values(), format));
     }
 
     // -----------------------------------------------------------------------
@@ -17,11 +22,19 @@ public class NumberFormats {
     // -----------------------------------------------------------------------
 
     public static FormattedLong siFormattingOf(long value) {
-        return new FormattedLong(value, get(value, SiEnum.values()));
+        return new FormattedLong(value, get(value, SiEnum.values(), getIntegerInstance()));
     }
 
     public static FormattedLong nanoTimeFormattingOf(long value) {
-        return new FormattedLong(value, get(value, NanoTimeEnum.values()));
+        return new FormattedLong(value, get(value, NanoTimeEnum.values(), getIntegerInstance()));
+    }
+
+    // -----------------------------------------------------------------------
+    // Double
+    // -----------------------------------------------------------------------
+
+    public static FormattedDouble siFormattingOf(double value) {
+        return new FormattedDouble(value, get(value, SiEnumForDouble.values(), getNumberInstance()));
     }
 
     // -----------------------------------------------------------------------
@@ -31,49 +44,91 @@ public class NumberFormats {
     private interface BreakingPoint {
         String name();
 
-        long value();
+        double value();
+
+        boolean useUnit();
     }
 
-    public enum SiEnum implements BreakingPoint {
+    private enum SiEnum implements BreakingPoint {
         G(1000000000),
         M(1000000),
         k(1000);
 
-        private final long value;
+        private final double value;
 
-        private SiEnum(long value) {
+        private SiEnum(double value) {
             this.value = value;
         }
 
-        public long value() {
+        public double value() {
             return value;
+        }
+
+        public boolean useUnit() {
+            return true;
         }
     }
 
-    public enum NanoTimeEnum implements BreakingPoint {
+    private enum NanoTimeEnum implements BreakingPoint {
         s(1000000000),
         ms(1000000),
         us(1000),
         ns(1);
 
-        private final long value;
+        private final double value;
 
-        private NanoTimeEnum(long value) {
+        private NanoTimeEnum(double value) {
             this.value = value;
         }
 
-        public long value() {
+        public double value() {
             return value;
+        }
+
+        public boolean useUnit() {
+            return true;
         }
     }
 
-    static String get(long value, BreakingPoint[] breakingPoints) {
+    private enum SiEnumForDouble implements BreakingPoint {
+        G(1000000000, true),
+        M(1000000, true),
+        k(1000, true),
+        x(1, false),
+        m(0.001, true),
+        u(0.000001, true),
+        n(0.000000001, true);
+
+        private final double value;
+        private final boolean useUnit;
+
+        private SiEnumForDouble(double value, boolean useUnit) {
+            this.value = value;
+            this.useUnit = useUnit;
+        }
+
+        public double value() {
+            return value;
+        }
+
+        public boolean useUnit() {
+            return useUnit;
+        }
+    }
+
+    static String get(double value, BreakingPoint[] breakingPoints, NumberFormat numberFormat) {
+
+        double factor = value >= 0 ? 1.0 : -1.0;
+        value = abs(value);
+
         for (BreakingPoint breakingPoint : breakingPoints) {
             if (value >= breakingPoint.value()) {
-                return value / breakingPoint.value() + breakingPoint.name();
+                double v = value / breakingPoint.value();
+                return numberFormat.format(factor * v) +
+                        (breakingPoint.useUnit() ? breakingPoint.name() : "");
             }
         }
 
-        return valueOf(value);
+        return numberFormat.format(factor * value);
     }
 }

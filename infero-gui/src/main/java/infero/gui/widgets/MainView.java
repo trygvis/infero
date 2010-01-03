@@ -5,12 +5,11 @@ import com.jeta.forms.components.panel.*;
 import com.jeta.forms.gui.form.*;
 import infero.gui.action.*;
 import infero.gui.domain.*;
-import static infero.gui.domain.TraceModel.Properties.*;
+import static infero.gui.domain.SampleBufferModel.Properties.*;
 import static infero.gui.widgets.MainView.Names.*;
 import infero.gui.widgets.util.*;
 import infero.util.*;
-import static infero.util.NumberFormats.*;
-import static java.lang.String.valueOf;
+import static java.lang.Integer.*;
 import static javax.swing.JTable.*;
 import net.guts.gui.action.*;
 
@@ -29,10 +28,12 @@ public class MainView extends FormPanel {
         public static final String ID_TIME_SCROLLBAR = "time.scrollbar";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_ZOOM = "zoom";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_DECIMAL = "value.decimal";  //com.jeta.forms.components.label.JETALabel
-        public static final String ID_TIME = "time";  //com.jeta.forms.components.label.JETALabel
+        public static final String ID_TIMESPAN = "timespan";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_HEX = "value.hex";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_OCTAL = "value.octal";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_BINARY = "value.binary";  //com.jeta.forms.components.label.JETALabel
+        public static final String ID_TIME_PER_PIXEL = "time.per.pixel";  //com.jeta.forms.components.label.JETALabel
+        public static final String ID_TIME = "time";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_LOG_FORM = "log.form";  //javax.swing.JPanel
         public static final String ID_LOG_TABLE = "log.table";  //javax.swing.JTable
         public static final String ID_CLEAR_BUTTON = "clear.button";  //javax.swing.JButton
@@ -42,41 +43,43 @@ public class MainView extends FormPanel {
         public static final String ID_TRACES = "traces";  //javax.swing.JPanel
     }
 
-    private final RawSample rawSample;
-    private final TraceModel traceModel;
+    private final SampleBufferModel sampleBufferModel;
     private final LogicAnalyzer logicAnalyzer;
     private final InferoLogTableModel inferoLogTableModel;
 
     private final JComboBox sampleCount;
     private final JComboBox sampleRate;
 
+    // Status panel
     private final JLabel zoom;
-
     private final JLabel decimal;
     private final JLabel hex;
     private final JLabel octal;
     private final JLabel binary;
+    private final JLabel time;
+    private final JLabel timespan;
+    private final JLabel timePerPixel;
 
     private final JSlider zoomSlider;
     private final JScrollBar timelineScrollbar;
 
     private final JTable logTable;
 
+    private final ChannelTracePanel firstChannelTracePanel;
+
     // -----------------------------------------------------------------------
     // Initialization
     // -----------------------------------------------------------------------
 
     @Inject
-    public MainView(RawSample rawSample,
-                    TraceModel traceModel,
+    public MainView(SampleBufferModel sampleBufferModel,
                     LogicAnalyzer logicAnalyzer,
                     InferoLogTableModel inferoLogTableModel,
                     LogicAnalyzerActions logicAnalyzerActions,
                     LogActions logActions,
                     ChannelTracePanelFactory channelTracePanelProviderFactory) {
         super("MainView.jfrm");
-        this.rawSample = rawSample;
-        this.traceModel = traceModel;
+        this.sampleBufferModel = sampleBufferModel;
         this.logicAnalyzer = logicAnalyzer;
         this.inferoLogTableModel = inferoLogTableModel;
 
@@ -89,6 +92,9 @@ public class MainView extends FormPanel {
         hex = getLabel(ID_VALUE_HEX);
         octal = getLabel(ID_VALUE_OCTAL);
         binary = getLabel(ID_VALUE_BINARY);
+        time = getLabel(ID_TIME);
+        timespan = getLabel(ID_TIMESPAN);
+        timePerPixel = getLabel(ID_TIME_PER_PIXEL);
 
         zoomSlider = (JSlider) getComponentByName(ID_ZOOM_SLIDER);
         timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
@@ -96,9 +102,9 @@ public class MainView extends FormPanel {
         logTable = getFormAccessor(ID_LOG_FORM).getTable(ID_LOG_TABLE);
 
         initializeHeader(logicAnalyzerActions.simulate);
-        initializeChannels(channelTracePanelProviderFactory);
+        firstChannelTracePanel = initializeChannels(channelTracePanelProviderFactory);
         initializeSliders();
-        initializeStatusPanel(traceModel);
+        initializeSampleBufferModel(sampleBufferModel);
         initializeLog(logActions.clearLogEntriesAction);
     }
 
@@ -118,9 +124,11 @@ public class MainView extends FormPanel {
         getButton(ID_SIMULATE_BUTTON).setAction(simulateAction.action());
     }
 
-    private void initializeChannels(ChannelTracePanelFactory channelTracePanelProvider) {
+    private ChannelTracePanel initializeChannels(ChannelTracePanelFactory channelTracePanelProvider) {
         FormAccessor topForm = getFormAccessor();
         FormAccessor tracesForm = getFormAccessor(ID_TRACES);
+
+        ChannelTracePanel first = null;
 
         for (Channel channel : logicAnalyzer.channels) {
             ChannelConfigurationView channelConfiguration = new ChannelConfigurationView(channel);
@@ -138,13 +146,37 @@ public class MainView extends FormPanel {
                 throw new RuntimeException("No such channel: 'channel." + channel.index + ".trace'.");
             }
             tracesForm.replaceBean("channel." + channel.index + ".trace", channelTrace);
+            if(first == null) {
+                first = channelTrace;
+            }
         }
+
+        if (first == null) {
+            throw new RuntimeException("Unable to find any channels.");
+        }
+
+        first.addComponentListener(new ComponentListener() {
+            public void componentResized(ComponentEvent e) {
+                sampleBufferModel.setViewWidth(e.getComponent().getWidth());
+            }
+
+            public void componentMoved(ComponentEvent e) {
+            }
+
+            public void componentShown(ComponentEvent e) {
+            }
+
+            public void componentHidden(ComponentEvent e) {
+            }
+        });
+
+        return first;
     }
 
     private void initializeSliders() {
         zoomSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
-                onZoomChanged(zoom, zoomSlider);
+                sampleBufferModel.setZoom(zoomSlider.getValue());
             }
         });
 
@@ -152,23 +184,42 @@ public class MainView extends FormPanel {
 
         topForm.replaceBean(ID_TIME_SCROLLBAR, timelineScrollbar);
 
-        timelineScrollbar.addAdjustmentListener(new AdjustmentListener() {
-            public void adjustmentValueChanged(AdjustmentEvent e) {
-                onTimelineChanged();
-            }
-        });
+//        timelineScrollbar.addAdjustmentListener(new AdjustmentListener() {
+//            public void adjustmentValueChanged(AdjustmentEvent e) {
+//            }
+//        });
     }
 
-    private void initializeStatusPanel(final TraceModel traceModel) {
-        final JLabel time = getLabel(ID_TIME);
-
+    private void initializeSampleBufferModel(final SampleBufferModel sampleBufferModel) {
         onSampleInvalidated();
 
-        traceModel.addPropertyChangeListener(MOUSE_POSITION, new PropertyChangeListener() {
+        sampleBufferModel.addPropertyChangeListener(SAMPLE_BUFFER, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
-                if (rawSample.isValid()) {
-                    time.setText(nanoTimeFormattingOf(traceModel.getTimeInNanoSeconds()).text);
+                onSampleValuesUpdated();
+            }
+        });
+
+        sampleBufferModel.addPropertyChangeListener(MOUSE_POSITION, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (!MainView.this.sampleBufferModel.isValid()) {
+                    return;
                 }
+
+                try {
+                    updateStatusPanel(sampleBufferModel.getView());
+                } catch (Throwable e) {
+                    e.printStackTrace(System.out);
+                }
+            }
+        });
+
+        sampleBufferModel.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (!MainView.this.sampleBufferModel.isValid()) {
+                    return;
+                }
+
+                updateStatusPanel(sampleBufferModel.getView());
             }
         });
     }
@@ -192,9 +243,34 @@ public class MainView extends FormPanel {
         });
     }
 
+    private void updateStatusPanel(SampleView sampleView) {
+        zoom.setText("" + sampleView.zoom);
+
+        // This has to be a bit smarter, has to show more precision
+        time.setText(sampleView.getMouseTime().toString());
+        timespan.setText(sampleView.sampleBuffer.timespan.toString());
+        timePerPixel.setText(sampleView.timePerPixel.toString());
+        time.setText(sampleView.getMouseTime().toString());
+
+        byte value = sampleView.getMouseValue();
+        int i = 0xff & value;
+        String b = Integer.toBinaryString(i);
+        b = "00000000".substring(0, 8 - b.length()) + b;
+
+        decimal.setText(Integer.toString(i));
+        hex.setText((value > 0x0f ? "0x" : "0x0") + toHexString(i));
+        binary.setText(b + "b");
+        octal.setText(toOctalString(i));
+    }
+
     // -----------------------------------------------------------------------
     // Events Handlers
     // -----------------------------------------------------------------------
+
+    private void onSampleValuesUpdated() {
+        zoomSlider.setEnabled(true);
+        timelineScrollbar.setEnabled(true);
+    }
 
     private void onSampleInvalidated() {
         zoom.setText("-");
@@ -210,12 +286,12 @@ public class MainView extends FormPanel {
     }
 
     private void onZoomChanged(JLabel zoom, JSlider zoomSlider) {
-        double currentZoom = ((double) zoomSlider.getValue()) / zoomSlider.getMaximum();
-        traceModel.setZoom(currentZoom);
-
-        if (rawSample.isValid()) {
-            zoom.setText(valueOf(currentZoom));
+        if (!sampleBufferModel.isValid()) {
+            return;
         }
+
+        SampleView sampleView = sampleBufferModel.getView();
+        zoom.setText("zoom=" + sampleView.zoom + ", time/px=" + sampleView.timePerPixel);
     }
 
     private void onTimelineChanged() {
@@ -233,6 +309,10 @@ public class MainView extends FormPanel {
         return ((FormattedInteger) sampleRate.getSelectedItem()).numeric;
     }
 
+    public int getTracePanelWidth() {
+        return firstChannelTracePanel.getWidth();
+    }
+    
     /**
      * This doesn't exactly work as advertised, it only scrolls to the second to last entry.
      */

@@ -3,7 +3,7 @@ package infero.gui.widgets;
 import com.google.inject.*;
 import com.google.inject.assistedinject.*;
 import infero.gui.domain.*;
-import static infero.gui.domain.RawSample.Properties.*;
+import static infero.gui.domain.SampleBufferModel.Properties.*;
 import infero.gui.domain.services.*;
 import infero.gui.domain.services.ChannelImageCreator.*;
 import infero.util.*;
@@ -25,23 +25,24 @@ public class ChannelTracePanel extends JPanel {
     private final InferoLog log;
     private final ChannelImageCreator imageCreator;
     private final Channel channel;
-    private final RawSample rawSample;
-    private final TraceModel traceModel;
+    private final SampleBufferModel sampleBufferModel;
 
     @Inject
-    public ChannelTracePanel(InferoLog log, ChannelImageCreator imageCreator, @Assisted Channel channel, final InferoLog inferoLog, final RawSample rawSample, final TraceModel traceModel) {
+    public ChannelTracePanel(InferoLog log,
+                             ChannelImageCreator imageCreator,
+                             @Assisted Channel channel,
+                             final SampleBufferModel sampleBufferModel) {
         this.log = log;
         this.imageCreator = imageCreator;
         this.channel = channel;
-        this.rawSample = rawSample;
-        this.traceModel = traceModel;
+        this.sampleBufferModel = sampleBufferModel;
 
-        rawSample.addPropertyChangeListener(VALUES, new PropertyChangeListener() {
+        sampleBufferModel.addPropertyChangeListener(SAMPLE_BUFFER, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 ChannelTracePanel.this.repaint();
             }
         });
-        rawSample.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
+        sampleBufferModel.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
                 ChannelTracePanel.this.repaint();
             }
@@ -49,7 +50,7 @@ public class ChannelTracePanel extends JPanel {
 
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseMoved(MouseEvent e) {
-                traceModel.setMousePosition(e.getPoint());
+                sampleBufferModel.setMousePosition(e.getPoint());
             }
         });
     }
@@ -70,7 +71,7 @@ public class ChannelTracePanel extends JPanel {
         graphics.setColor(getBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
-        if (!rawSample.isValid()) {
+        if (!sampleBufferModel.isValid()) {
             return;
         }
 
@@ -80,13 +81,13 @@ public class ChannelTracePanel extends JPanel {
 
         graphics.setColor(getForeground());
 
-        double zoom = traceModel.getZoom();
+        double zoom = sampleBufferModel.getView().zoom;
         int width = getWidth();
         int highY = 1;
         int lowY = getHeight() - 2;
 
         lap = lap.lap("create image");
-        ChannelPixel[] pixels = imageCreator.createImage(channel, rawSample, width);
+        ChannelPixel[] pixels = imageCreator.createImage(channel, sampleBufferModel.getView().sampleBuffer, width);
 
         lap = lap.lap("render pixels");
 
