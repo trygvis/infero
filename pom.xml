@@ -13,24 +13,22 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <!--
   <repositories>
     <repository>
       <id>guts-releases</id>
-      <url>http://kenai.com/projects/guts/sources/guts-maven-repository/content/releases</url>
+      <url>https://kenai.com/website/guts/maven/releases</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
     </repository>
     <repository>
       <id>guts-snapshot</id>
-      <url>http://kenai.com/projects/guts/sources/guts-maven-repository/content/snapshots</url>
+      <url>https://kenai.com/website/guts/maven/snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
     </repository>
   </repositories>
-  -->
   <build>
     <plugins>
       <plugin>

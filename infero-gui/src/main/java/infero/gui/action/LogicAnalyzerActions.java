@@ -5,6 +5,7 @@ import infero.gui.domain.*;
 import static infero.gui.domain.InferoLogEntry.*;
 import infero.gui.widgets.*;
 import net.guts.gui.action.*;
+import net.guts.gui.action.blocker.*;
 
 public class LogicAnalyzerActions {
     private final InferoLog inferoLog;
@@ -50,7 +51,7 @@ public class LogicAnalyzerActions {
 
                     return null;
                 }
-            });
+            }, this, GlassPaneBlocker.class);
         }
     };
 }
