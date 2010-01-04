@@ -1,6 +1,6 @@
 package infero.util;
 
-public class FormattedLong implements FormattedNumber {
+public class FormattedLong {
 
     public final long numeric;
     public final String text;
@@ -10,7 +10,7 @@ public class FormattedLong implements FormattedNumber {
         this.text = text;
     }
 
-    public String text() {
+    public String toString() {
         return text;
     }
 }

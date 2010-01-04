@@ -1,10 +1,7 @@
 package infero.gui.domain;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import java.beans.*;
 
-/**
- */
 public class AbstractDomainObject<E extends Enum> {
     private final transient PropertyChangeSupport propertyChangeSupport = new PropertyChangeSupport(this);
 

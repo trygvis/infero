@@ -2,14 +2,13 @@ package infero.gui;
 
 import com.google.inject.*;
 import infero.gui.action.*;
+import infero.gui.domain.*;
 import infero.gui.widgets.*;
 import static javax.swing.UIManager.*;
 import net.guts.gui.application.*;
 import net.guts.gui.application.WindowController.*;
 import net.guts.gui.exit.*;
 import net.guts.gui.menu.*;
-import net.guts.gui.message.*;
-import net.guts.gui.resource.*;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -17,29 +16,26 @@ import java.awt.event.*;
 public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final WindowController windowController;
     private final MenuFactory menuFactory;
-    private final MessageFactory messageFactory;
-    private final ResourceInjector injector;
     private final ExitController exitController;
     private final GutsApplicationActions appActions;
     private final MainView mainView;
+    private final MemoryUsageModel memoryUsageModel;
     private final LogicAnalyzerActions logicAnalyzerActions;
 
     @Inject
     public InferoLifecycleStarter(WindowController windowController,
                                   MenuFactory menuFactory,
-                                  MessageFactory messageFactory,
-                                  ResourceInjector injector,
                                   ExitController exitController,
                                   GutsApplicationActions appActions,
                                   MainView mainView,
+                                  MemoryUsageModel memoryUsageModel,
                                   LogicAnalyzerActions logicAnalyzerActions) {
         this.windowController = windowController;
         this.menuFactory = menuFactory;
-        this.messageFactory = messageFactory;
-        this.injector = injector;
         this.exitController = exitController;
         this.appActions = appActions;
         this.mainView = mainView;
+        this.memoryUsageModel = memoryUsageModel;
         this.logicAnalyzerActions = logicAnalyzerActions;
     }
 
@@ -57,6 +53,14 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
         } catch (UnsupportedLookAndFeelException e) {
             e.printStackTrace();
         }
+
+        Thread thread = new Thread(new Runnable() {
+            public void run() {
+                memorySupervisor();
+            }
+        }, "Memory Supervisor");
+        thread.setDaemon(true);
+        thread.start();
 
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(menuFactory.createMenu("menu.file", 
@@ -79,7 +83,18 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
         windowController.show(mainFrame, BoundsPolicy.PACK_AND_CENTER);
     }
 
+    private void memorySupervisor() {
+        final Runtime runtime = Runtime.getRuntime();
+        while(true) {
+            memoryUsageModel.update(runtime.freeMemory(), runtime.maxMemory(), runtime.totalMemory());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+    }
+
     public void ready() {
-        System.out.println("InferoLifecycleStarter.ready");
     }
 }

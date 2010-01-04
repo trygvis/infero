@@ -5,11 +5,14 @@ import com.jeta.forms.components.panel.*;
 import com.jeta.forms.gui.form.*;
 import infero.gui.action.*;
 import infero.gui.domain.*;
+import static infero.gui.domain.MemoryUsageModel.Properties.*;
 import static infero.gui.domain.SampleBufferModel.Properties.*;
 import static infero.gui.widgets.MainView.Names.*;
 import infero.gui.widgets.util.*;
 import infero.util.*;
+import static infero.util.NumberFormats.siFormattingOf;
 import static java.lang.Integer.*;
+import static java.lang.String.*;
 import static javax.swing.JTable.*;
 import net.guts.gui.action.*;
 
@@ -41,6 +44,7 @@ public class MainView extends FormPanel {
         public static final String ID_SAMPLE_RATE = "sample.rate";  //javax.swing.JComboBox
         public static final String ID_SIMULATE_BUTTON = "simulate.button";  //javax.swing.JButton
         public static final String ID_TRACES = "traces";  //javax.swing.JPanel
+        public static final String ID_MEMORY_USAGE = "memory.usage";  //javax.swing.JProgressBar
     }
 
     private final SampleBufferModel sampleBufferModel;
@@ -75,6 +79,7 @@ public class MainView extends FormPanel {
     public MainView(SampleBufferModel sampleBufferModel,
                     LogicAnalyzer logicAnalyzer,
                     InferoLogTableModel inferoLogTableModel,
+                    MemoryUsageModel memoryUsageModel,
                     LogicAnalyzerActions logicAnalyzerActions,
                     LogActions logActions,
                     ChannelTracePanelFactory channelTracePanelProviderFactory) {
@@ -106,6 +111,25 @@ public class MainView extends FormPanel {
         initializeSliders();
         initializeSampleBufferModel(sampleBufferModel);
         initializeLog(logActions.clearLogEntriesAction);
+        initializeMemoryUsage(memoryUsageModel, getProgressBar(ID_MEMORY_USAGE));
+    }
+
+    private void initializeMemoryUsage(final MemoryUsageModel memoryUsageModel, final JProgressBar progressBar) {
+        progressBar.setEnabled(true);
+        memoryUsageModel.addPropertyChangeListener(FREE, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                String toolTip = format("Max=%s, total=%s, free=%s",
+                        siFormattingOf(memoryUsageModel.getMax()),
+                        siFormattingOf(memoryUsageModel.getTotal()),
+                        siFormattingOf(memoryUsageModel.getFree()));
+
+                System.out.println("toolTip = " + toolTip);
+                int total = (int) memoryUsageModel.getTotal();
+                progressBar.setMaximum(total);
+                progressBar.setValue(total - (int)memoryUsageModel.getFree());
+                progressBar.setToolTipText(toolTip);
+            }
+        });
     }
 
     private void initializeHeader(GutsAction simulateAction) {
