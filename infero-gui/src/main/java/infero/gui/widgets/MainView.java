@@ -123,7 +123,6 @@ public class MainView extends FormPanel {
                         siFormattingOf(memoryUsageModel.getTotal()),
                         siFormattingOf(memoryUsageModel.getFree()));
 
-                System.out.println("toolTip = " + toolTip);
                 int total = (int) memoryUsageModel.getTotal();
                 progressBar.setMaximum(total);
                 progressBar.setValue(total - (int)memoryUsageModel.getFree());
