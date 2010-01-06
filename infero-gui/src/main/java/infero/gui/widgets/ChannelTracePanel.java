@@ -9,6 +9,7 @@ import infero.gui.domain.services.*;
 import infero.gui.domain.services.ChannelImageCreator.*;
 import infero.util.*;
 import static infero.util.Lap.*;
+import static infero.util.NumberFormats.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -61,7 +62,6 @@ public class ChannelTracePanel extends JPanel {
     int repaintCounter;
 
     public void paint(Graphics g) {
-        Lap lap = startTimer("paint()");
         Graphics2D graphics = (Graphics2D) g;
 
         repaintCounter++;
@@ -70,7 +70,7 @@ public class ChannelTracePanel extends JPanel {
         // Clear the area
         // -----------------------------------------------------------------------
 
-        lap = lap.lap("clear existing image");
+        Lap lap = startTimer("clear existing image");
         graphics.setColor(getBackground());
         graphics.fillRect(0, 0, getWidth(), getHeight());
 
@@ -92,7 +92,7 @@ public class ChannelTracePanel extends JPanel {
         lap = lap.lap("create image");
         ChannelPixel[] pixels = imageCreator.createImage(channel, sampleBufferModel.getView().sampleBuffer, width);
 
-        lap = lap.lap("render pixels");
+        lap = lap.lap("rendering " + pixels.length + " pixels");
 
         ChannelPixel last = pixels[0];
         for (int x = 0, pixelsLength = pixels.length; x < pixelsLength; x++) {
@@ -119,14 +119,15 @@ public class ChannelTracePanel extends JPanel {
             last = pixel;
         }
 
-        log.logEntries(entries(lap));
+        log.logEntries(entries(lap.done()));
     }
 
-    private List<InferoLogEntry> entries(Lap lap) {
-        List<InferoLogEntry> list = new ArrayList<InferoLogEntry>(lap.count);
-        while(lap != null) {
-            list.add(info(lap.toString()));
-            lap = lap.previous;
+    private List<InferoLogEntry> entries(StoppedTimer stoppedTimer) {
+        String[] strings = Lap.longFormatting(stoppedTimer);
+        List<InferoLogEntry> list = new ArrayList<InferoLogEntry>(strings.length);
+
+        for (String string : strings) {
+            list.add(info(string));
         }
         return list;
     }

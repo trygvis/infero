@@ -1,45 +1,50 @@
 package infero.util;
 
-import java.io.PrintStream;
+import static infero.util.NumberFormats.*;
+import static java.lang.System.*;
 
-import static java.lang.System.nanoTime;
+import java.io.*;
 
 public class Lap {
 
     public final Lap previous;
     public final long time;
     public final String name;
-    public final int count;
+    public final int round;
 
     public static Lap startTimer() {
-        return new Lap(null, nanoTime(), null, 1);
+        return startTimer(null);
     }
 
     public static Lap startTimer(String name) {
-        return new Lap(null, nanoTime(), name, 1);
+        return new Lap(null, name, 1);
     }
 
-    private Lap(Lap previous, long time, String name, int count) {
+    // -----------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------
+
+    private Lap(Lap previous, String name, int round) {
         this.previous = previous;
-        this.time = time;
+        this.time = nanoTime();
         this.name = name;
-        this.count = count;
+        this.round = round;
     }
 
     public Lap lap() {
-        return new Lap(this, nanoTime(), null, count + 1);
+        return lap(null);
     }
 
     public Lap lap(String name) {
-        return new Lap(this, nanoTime(), name, count + 1);
+        return new Lap(this, name, round + 1);
     }
 
     public String toString() {
         if (previous == null) {
-            return (name == null ? "Start: " : name + ": ") + time;
+            return "Start: " + name;
         }
 
-        String prefix = name == null ? "elapsed: " : name + ": ";
+        String prefix = name + " took ";
         long diff = time - previous.time;
 
         String unit;
@@ -70,5 +75,48 @@ public class Lap {
         }
 
         out.println(toString());
+    }
+
+    public StoppedTimer done() {
+        return new StoppedTimer(this);
+    }
+
+    public static class StoppedTimer extends Lap {
+        private StoppedTimer(Lap previous) {
+            super(previous, "last lap", previous.round);
+        }
+
+        @Override
+        public Lap lap(String name) {
+            throw new RuntimeException("This timer has been stopped.");
+        }
+    }
+
+    public static String[] longFormatting(final StoppedTimer timer) {
+        Lap previous = timer;
+        Lap current = timer.previous;
+        Lap first = previous;
+
+        String[] lines = new String[timer.round + 1];
+
+        while (current != null) {
+            String s = "Time for #" + (current.round);
+            if (current.name != null) {
+                s += " '" + current.name + "': ";
+            } else {
+                s += ": ";
+            }
+            s += nanoTimeFormattingOf(previous.time - current.time);
+            lines[current.round - 1] = s;
+            first = current;
+            previous = current;
+            current = current.previous;
+        }
+
+        lines[lines.length - 1] = "Total time for " + timer.round +
+                " lap" + (timer.round > 1 ? "s" : "") + ": " +
+                nanoTimeFormattingOf(timer.time - first.time);
+
+        return lines;
     }
 }

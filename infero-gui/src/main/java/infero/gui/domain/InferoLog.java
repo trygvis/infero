@@ -27,8 +27,4 @@ public class InferoLog {
             model.logEntry(entry);
         }
     }
-
-    public void clear() {
-        model.clear();
-    }
 }
