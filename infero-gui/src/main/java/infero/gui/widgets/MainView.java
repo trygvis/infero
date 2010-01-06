@@ -284,13 +284,12 @@ public class MainView extends FormPanel {
         timePerPixel.setText(sampleView.timePerPixel.toString());
         time.setText(sampleView.getMouseTime().toString());
 
-        byte value = sampleView.getMouseValue();
-        int i = 0xff & value;
+        int i = 0xff & sampleView.getMouseValue();
         String b = Integer.toBinaryString(i);
         b = "00000000".substring(0, 8 - b.length()) + b;
 
         decimal.setText(Integer.toString(i));
-        hex.setText((value > 0x0f ? "0x" : "0x0") + toHexString(i));
+        hex.setText((i > 0x0f ? "0x" : "0x0") + toHexString(i));
         binary.setText(b + "b");
         octal.setText(toOctalString(i));
     }
