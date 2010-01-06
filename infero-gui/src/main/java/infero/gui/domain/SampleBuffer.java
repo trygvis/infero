@@ -18,13 +18,8 @@ public class SampleBuffer {
         this.samples = samples;
         this.samplesPerSecond = samplesPerSecond;
 
-        System.out.println("samplesPerSecond = " + samplesPerSecond);
         this.timePerSample = nanoSecondsFromSeconds(1.0 / samplesPerSecond);
-        System.out.println("timePerSample = " + timePerSample);
-
         timespan = timePerSample.multipliedWith(samples.length);
-
-        System.out.println("timespan = " + timespan);
     }
 
     public int size() {

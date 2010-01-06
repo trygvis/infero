@@ -41,7 +41,6 @@ public class LogicAnalyzerActions {
 
                         int samplesPerSecond = mainView.getSelectedSampleRate();
 
-                        System.out.println("mainView.getTracePanelWidth() = " + mainView.getTracePanelWidth());
                         sampleBufferModel.setViewWidth(mainView.getTracePanelWidth());
 
                         sampleBufferModel.setSample(new SampleBuffer(samples, samplesPerSecond));

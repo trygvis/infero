@@ -2,16 +2,22 @@ package infero.gui.domain;
 
 import static java.lang.String.format;
 
+import java.util.*;
+
 public class InferoLogEntry {
-    public final long timeInMilliseconds;
+    public final Date date;
     public final String text;
 
-    InferoLogEntry(long timeInMilliseconds, String text) {
-        this.timeInMilliseconds = timeInMilliseconds;
+    InferoLogEntry(Date date, String text) {
+        this.date = date;
         this.text = text;
     }
 
     public static InferoLogEntry info(String text, Object ... args) {
-        return new InferoLogEntry(System.currentTimeMillis(), format(text, args));
+        return new InferoLogEntry(new Date(), format(text, args));
+    }
+
+    public static InferoLogEntry entryWithDate(Date date, String text) {
+        return new InferoLogEntry(date, text);
     }
 }

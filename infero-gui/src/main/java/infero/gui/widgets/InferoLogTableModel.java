@@ -2,6 +2,7 @@ package infero.gui.widgets;
 
 import com.google.inject.*;
 import infero.gui.domain.*;
+import static infero.gui.domain.InferoLogEntry.*;
 
 import javax.swing.table.*;
 import java.util.*;
@@ -31,9 +32,9 @@ public class InferoLogTableModel extends AbstractTableModel {
         return columnNames[columnIndex];
     }
 
-    public Class<?> getColumnClass(int columnIndex) {
+    public Class getColumnClass(int columnIndex) {
         if (columnIndex == 0) {
-            return Long.class;
+            return Date.class;
         }
         return String.class;
     }
@@ -42,7 +43,7 @@ public class InferoLogTableModel extends AbstractTableModel {
         InferoLogEntry logEntry = entries.get(rowIndex);
 
         if (columnIndex == 0) {
-            return logEntry.timeInMilliseconds;
+            return logEntry.date;
         }
         return logEntry.text;
     }
@@ -52,9 +53,15 @@ public class InferoLogTableModel extends AbstractTableModel {
     // -----------------------------------------------------------------------
 
     public void logEntry(InferoLogEntry entry) {
-        entries.add(entry);
 
+        entries.add(entry);
         super.fireTableRowsInserted(entries.size(), entries.size());
+    }
+
+    public void logEntries(List<InferoLogEntry> entries) {
+        int firstRow = this.entries.size();
+        this.entries.addAll(entries);
+        super.fireTableRowsInserted(firstRow, firstRow + entries.size());
     }
 
     public void clear() {

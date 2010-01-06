@@ -3,6 +3,7 @@ package infero.gui;
 import com.google.inject.*;
 import infero.gui.action.*;
 import infero.gui.domain.*;
+import static infero.gui.domain.InferoLogEntry.info;
 import infero.gui.widgets.*;
 import static javax.swing.UIManager.*;
 import net.guts.gui.application.*;
@@ -20,6 +21,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final GutsApplicationActions appActions;
     private final MainView mainView;
     private final MemoryUsageModel memoryUsageModel;
+    private final InferoLog inferoLog;
     private final LogicAnalyzerActions logicAnalyzerActions;
 
     @Inject
@@ -29,6 +31,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
                                   GutsApplicationActions appActions,
                                   MainView mainView,
                                   MemoryUsageModel memoryUsageModel,
+                                  InferoLog inferoLog,
                                   LogicAnalyzerActions logicAnalyzerActions) {
         this.windowController = windowController;
         this.menuFactory = menuFactory;
@@ -36,6 +39,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
         this.appActions = appActions;
         this.mainView = mainView;
         this.memoryUsageModel = memoryUsageModel;
+        this.inferoLog = inferoLog;
         this.logicAnalyzerActions = logicAnalyzerActions;
     }
 
@@ -96,5 +100,6 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
     }
 
     public void ready() {
+        inferoLog.logEntry(info("The Infero is ready, bring it on!"));
     }
 }

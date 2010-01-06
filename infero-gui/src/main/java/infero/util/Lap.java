@@ -9,27 +9,29 @@ public class Lap {
     public final Lap previous;
     public final long time;
     public final String name;
+    public final int count;
 
     public static Lap startTimer() {
-        return new Lap(null, nanoTime(), null);
+        return new Lap(null, nanoTime(), null, 1);
     }
 
     public static Lap startTimer(String name) {
-        return new Lap(null, nanoTime(), name);
+        return new Lap(null, nanoTime(), name, 1);
     }
 
-    private Lap(Lap previous, long time, String name) {
+    private Lap(Lap previous, long time, String name, int count) {
         this.previous = previous;
         this.time = time;
         this.name = name;
+        this.count = count;
     }
 
     public Lap lap() {
-        return new Lap(this, nanoTime(), null);
+        return new Lap(this, nanoTime(), null, count + 1);
     }
 
     public Lap lap(String name) {
-        return new Lap(this, nanoTime(), name);
+        return new Lap(this, nanoTime(), name, count + 1);
     }
 
     public String toString() {

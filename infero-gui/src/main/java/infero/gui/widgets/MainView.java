@@ -22,6 +22,7 @@ import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+import java.util.*;
 
 @Singleton
 public class MainView extends FormPanel {
@@ -38,13 +39,15 @@ public class MainView extends FormPanel {
         public static final String ID_TIME_PER_PIXEL = "time.per.pixel";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_TIME = "time";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_LOG_FORM = "log.form";  //javax.swing.JPanel
-        public static final String ID_LOG_TABLE = "log.table";  //javax.swing.JTable
         public static final String ID_CLEAR_BUTTON = "clear.button";  //javax.swing.JButton
         public static final String ID_SAMPLE_COUNT = "sample.count";  //javax.swing.JComboBox
         public static final String ID_SAMPLE_RATE = "sample.rate";  //javax.swing.JComboBox
         public static final String ID_SIMULATE_BUTTON = "simulate.button";  //javax.swing.JButton
         public static final String ID_TRACES = "traces";  //javax.swing.JPanel
         public static final String ID_MEMORY_USAGE = "memory.usage";  //javax.swing.JProgressBar
+
+        // Custom - this was not copied from the name export - bug?
+        public static final String ID_LOG_TABLE_SCROLL_PANE = "log.table.scroll.pane";
     }
 
     private final SampleBufferModel sampleBufferModel;
@@ -104,7 +107,11 @@ public class MainView extends FormPanel {
         zoomSlider = (JSlider) getComponentByName(ID_ZOOM_SLIDER);
         timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
 
-        logTable = getFormAccessor(ID_LOG_FORM).getTable(ID_LOG_TABLE);
+        // There's something fishy with the table we're getting from JETA
+        logTable = new JTable();
+        JScrollPane scrollPane = new JScrollPane(logTable);
+        // For some reason the designer won't make a constant for this property
+        getFormAccessor(ID_LOG_FORM).replaceBean(ID_LOG_TABLE_SCROLL_PANE, scrollPane);
 
         initializeHeader(logicAnalyzerActions.simulate);
         firstChannelTracePanel = initializeChannels(channelTracePanelProviderFactory);
@@ -112,23 +119,6 @@ public class MainView extends FormPanel {
         initializeSampleBufferModel(sampleBufferModel);
         initializeLog(logActions.clearLogEntriesAction);
         initializeMemoryUsage(memoryUsageModel, getProgressBar(ID_MEMORY_USAGE));
-    }
-
-    private void initializeMemoryUsage(final MemoryUsageModel memoryUsageModel, final JProgressBar progressBar) {
-        progressBar.setEnabled(true);
-        memoryUsageModel.addPropertyChangeListener(FREE, new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent evt) {
-                String toolTip = format("Max=%s, total=%s, free=%s",
-                        siFormattingOf(memoryUsageModel.getMax()),
-                        siFormattingOf(memoryUsageModel.getTotal()),
-                        siFormattingOf(memoryUsageModel.getFree()));
-
-                int total = (int) memoryUsageModel.getTotal();
-                progressBar.setMaximum(total);
-                progressBar.setValue(total - (int)memoryUsageModel.getFree());
-                progressBar.setToolTipText(toolTip);
-            }
-        });
     }
 
     private void initializeHeader(GutsAction simulateAction) {
@@ -252,9 +242,11 @@ public class MainView extends FormPanel {
         logTable.setModel(inferoLogTableModel);
 
         TableColumn timeColumn = logTable.getColumnModel().getColumn(0);
-        timeColumn.setPreferredWidth(100);
+        timeColumn.setMaxWidth(200);
+        timeColumn.setPreferredWidth(timeColumn.getMaxWidth());
         timeColumn.setResizable(false);
 
+        logTable.setDefaultRenderer(Date.class, new LogEntryTimeStampTableCellRenderer());
         logTable.setAutoResizeMode(AUTO_RESIZE_LAST_COLUMN);
 
         getButton(ID_CLEAR_BUTTON).setAction(clearLogEntriesAction.action());
@@ -262,6 +254,23 @@ public class MainView extends FormPanel {
         inferoLogTableModel.addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
                 scrollToLastLogEntry();
+            }
+        });
+    }
+
+    private void initializeMemoryUsage(final MemoryUsageModel memoryUsageModel, final JProgressBar progressBar) {
+        progressBar.setEnabled(true);
+        memoryUsageModel.addPropertyChangeListener(FREE, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                String toolTip = format("Max=%s, total=%s, free=%s",
+                        siFormattingOf(memoryUsageModel.getMax()),
+                        siFormattingOf(memoryUsageModel.getTotal()),
+                        siFormattingOf(memoryUsageModel.getFree()));
+
+                int total = (int) memoryUsageModel.getTotal();
+                progressBar.setMaximum(total);
+                progressBar.setValue(total - (int)memoryUsageModel.getFree());
+                progressBar.setToolTipText(toolTip);
             }
         });
     }
@@ -346,4 +355,5 @@ public class MainView extends FormPanel {
 
         logTable.scrollRectToVisible(new Rectangle(width, height, width, height));
     }
+
 }

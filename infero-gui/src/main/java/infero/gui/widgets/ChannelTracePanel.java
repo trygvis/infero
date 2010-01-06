@@ -3,6 +3,7 @@ package infero.gui.widgets;
 import com.google.inject.*;
 import com.google.inject.assistedinject.*;
 import infero.gui.domain.*;
+import static infero.gui.domain.InferoLogEntry.*;
 import static infero.gui.domain.SampleBufferModel.Properties.*;
 import infero.gui.domain.services.*;
 import infero.gui.domain.services.ChannelImageCreator.*;
@@ -13,6 +14,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.*;
+import java.util.*;
+import java.util.List;
 
 /**
  * TODO: As an optimization the GUI should buffer the last rendered image.
@@ -116,10 +119,15 @@ public class ChannelTracePanel extends JPanel {
             last = pixel;
         }
 
-        log.logEntry(entry(lap));
+        log.logEntries(entries(lap));
     }
 
-    private InferoLogEntry entry(Lap lap) {
-        return InferoLogEntry.info(lap.toString());
+    private List<InferoLogEntry> entries(Lap lap) {
+        List<InferoLogEntry> list = new ArrayList<InferoLogEntry>(lap.count);
+        while(lap != null) {
+            list.add(info(lap.toString()));
+            lap = lap.previous;
+        }
+        return list;
     }
 }
