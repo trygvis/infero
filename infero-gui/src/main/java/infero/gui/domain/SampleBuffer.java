@@ -1,11 +1,11 @@
 package infero.gui.domain;
 
 import infero.util.*;
-import static infero.util.NanoSeconds.nanoSecondsFromSeconds;
+import static infero.util.NanoSeconds.*;
 import static java.lang.String.*;
 
 /**
- * Represents a single stream from the Logic.
+ * Represents a single capture from the Logic.
  */
 public class SampleBuffer {
 
@@ -34,9 +34,9 @@ public class SampleBuffer {
         return samples;
     }
 
-    // -----------------------------------------------------------------------
-    //
-    // -----------------------------------------------------------------------
+    public int getIndex(NanoSeconds time) {
+        return (int) (time.dividedBy(timePerSample));
+    }
 
     public static class Chunk {
         public final int start;
@@ -51,36 +51,38 @@ public class SampleBuffer {
     /**
      * Both start and end are inclusive.
      */
-    public Chunk[] createChunks(int start, int end, int nChunks) {
-        int sampleBufferSize = samples.length;
-
-        if (start > end) {
-            throw new RuntimeException(format("start >= end: start=%d, end=%d", start, end));
+    public Chunk[] createChunks(NanoSeconds startTime, NanoSeconds endTime, int nChunks) {
+        if (startTime.isAfter(endTime)) {
+            throw new RuntimeException(format("start is after end: start=%s, end=%s", startTime, endTime));
         }
-        if (end >= sampleBufferSize) {
-            throw new RuntimeException(format("end >= samples.length: end=%d, samples.length=%d", end, samples.length));
+
+        if (endTime.isAfter(timespan)) {
+            throw new RuntimeException(format("end is after timespan: end=%s, timespan=%s", endTime, timespan));
         }
 
         Chunk[] chunks = new Chunk[nChunks];
 
-        int last = start;
-        int size = (sampleBufferSize - start - (sampleBufferSize - end - 1)) / nChunks;
+        double startIndex = getIndex(startTime);
+        int endIndex = getIndex(endTime);
 
-//        System.out.println("(samples.length - start - (samples.length - end + 1)) = " + (samples.length - start - (samples.length - end + 1)));
-//        System.out.println(format("start = %d, end = %d, length = %d, size = %d", start, end, samples.length, size));
-//        System.out.println("size = " + size);
+        if (nChunks == 1) {
+            return new Chunk[]{new Chunk((int) startIndex, endIndex)};
+        }
+
+        double selectedNumberOfSamples = endIndex - startIndex;
+        double size = selectedNumberOfSamples / nChunks;
 
         for (int i = 0; i < nChunks; i++) {
-            chunks[i] = new Chunk(last, last + size - 1);
-            last = last + size;
+            int end = (int) (startIndex + size);
+            int start = (int) startIndex;
+            chunks[i] = new Chunk(start, end == start ? start + 1 : end);
+            startIndex = startIndex + size;
         }
 
         // Make the last chunk include the rest of the array
-        if (nChunks > 1) {
-            Chunk c = chunks[chunks.length - 1];
+        Chunk c = chunks[chunks.length - 1];
 
-            chunks[chunks.length - 1] = new Chunk(c.start, end);
-        }
+        chunks[chunks.length - 1] = new Chunk(c.start, endIndex);
 
         return chunks;
     }

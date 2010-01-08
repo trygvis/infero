@@ -3,7 +3,7 @@ package infero.gui;
 import com.google.inject.*;
 import infero.gui.action.*;
 import infero.gui.domain.*;
-import static infero.gui.domain.InferoLogEntry.info;
+import static infero.gui.domain.InferoLogEntry.*;
 import infero.gui.widgets.*;
 import static javax.swing.UIManager.*;
 import net.guts.gui.application.*;
@@ -67,7 +67,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
         thread.start();
 
         JMenuBar menuBar = new JMenuBar();
-        menuBar.add(menuFactory.createMenu("menu.file", 
+        menuBar.add(menuFactory.createMenu("menu.file",
                 logicAnalyzerActions.simulate,
                 MenuFactory.ACTION_SEPARATOR,
                 appActions.quit()));
@@ -89,7 +89,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
 
     private void memorySupervisor() {
         final Runtime runtime = Runtime.getRuntime();
-        while(true) {
+        while (true) {
             memoryUsageModel.update(runtime.freeMemory(), runtime.maxMemory(), runtime.totalMemory());
             try {
                 Thread.sleep(1000);

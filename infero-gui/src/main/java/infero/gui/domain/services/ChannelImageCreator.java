@@ -1,15 +1,10 @@
 package infero.gui.domain.services;
 
-import com.google.inject.Singleton;
-import infero.gui.domain.Channel;
-import infero.gui.domain.SampleBuffer;
-import infero.gui.domain.SampleBuffer.Chunk;
-
+import com.google.inject.*;
+import infero.gui.domain.*;
+import infero.gui.domain.SampleBuffer.*;
 import static infero.gui.domain.services.ChannelImageCreator.ChannelPixel.*;
 
-/**
- * @version $Id$
- */
 @Singleton
 public class ChannelImageCreator {
     public enum ChannelPixel {
@@ -18,29 +13,38 @@ public class ChannelImageCreator {
         BOTH,
     }
 
-    public ChannelPixel[] createImage(Channel channel, SampleBuffer sampleBuffer, int width) {
+    public ChannelPixel[] createImage(byte[] values, Chunk[] chunks, Channel channel, int width) {
         ChannelPixel[] pixels = new ChannelPixel[width];
 
-        byte[] values = sampleBuffer.getSamples();
         byte filter = (byte) (1 << channel.index);
-
-        Chunk[] chunks = sampleBuffer.createChunks(0, sampleBuffer.size() - 1, width);
         for (int i = 0, chunksLength = chunks.length; i < chunksLength; i++) {
             Chunk chunk = chunks[i];
-            boolean high = false;
-            boolean low = false;
+            int j = chunk.start;
+            int end = chunk.end;
 
-            for (int j = chunk.start; j <= chunk.end; j++) {
-                byte value = values[j];
-
-                if ((value & filter) == 0) {
-                    low = true;
-                } else {
-                    high = true;
+            if ((values[j] & filter) == 0) {
+                while (j < end) {
+                    if ((values[j] & filter) == 1) {
+                        pixels[i] = BOTH;
+                        break;
+                    }
+                    j++;
+                }
+                if (j == end) {
+                    pixels[i] = LOW;
+                }
+            } else {
+                while (j < end) {
+                    if ((values[j] & filter) == 0) {
+                        pixels[i] = BOTH;
+                        break;
+                    }
+                    j++;
+                }
+                if (j == end) {
+                    pixels[i] = HIGH;
                 }
             }
-
-            pixels[i] = high ? (low ? BOTH : HIGH ) : LOW;
         }
 
         return pixels;

@@ -5,11 +5,9 @@ import com.google.inject.assistedinject.*;
 import infero.gui.domain.*;
 import static infero.gui.domain.InferoLogEntry.*;
 import static infero.gui.domain.SampleBufferModel.Properties.*;
-import infero.gui.domain.services.*;
 import infero.gui.domain.services.ChannelImageCreator.*;
 import infero.util.*;
 import static infero.util.Lap.*;
-import static infero.util.NumberFormats.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,27 +25,31 @@ import java.util.List;
  */
 public class ChannelTracePanel extends JPanel {
     private final InferoLog log;
-    private final ChannelImageCreator imageCreator;
     private final Channel channel;
     private final SampleBufferModel sampleBufferModel;
 
     @Inject
     public ChannelTracePanel(InferoLog log,
-                             ChannelImageCreator imageCreator,
                              @Assisted Channel channel,
                              final SampleBufferModel sampleBufferModel) {
         this.log = log;
-        this.imageCreator = imageCreator;
         this.channel = channel;
         this.sampleBufferModel = sampleBufferModel;
 
+        /*
+         * If you're missing a handler for the component size updating the width of the panels, it's
+         * added from the MainView as only the first need the handler.
+         */
+
         sampleBufferModel.addPropertyChangeListener(SAMPLE_BUFFER, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
+                ChannelTracePanel.this.revalidate();
                 ChannelTracePanel.this.repaint();
             }
         });
         sampleBufferModel.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
+                ChannelTracePanel.this.revalidate();
                 ChannelTracePanel.this.repaint();
             }
         });
@@ -62,8 +64,14 @@ public class ChannelTracePanel extends JPanel {
     int repaintCounter;
 
     public void paint(Graphics g) {
-        Graphics2D graphics = (Graphics2D) g;
+        try {
+            doPaint((Graphics2D) g);
+        } catch (Throwable e) {
+            e.printStackTrace(System.out);
+        }
+    }
 
+    public void doPaint(Graphics2D graphics) {
         repaintCounter++;
 
         // -----------------------------------------------------------------------
@@ -84,13 +92,10 @@ public class ChannelTracePanel extends JPanel {
 
         graphics.setColor(getForeground());
 
-        double zoom = sampleBufferModel.getView().zoom;
-        int width = getWidth();
+        ChannelPixel[] pixels = sampleBufferModel.getPixelsForChannel(channel);
+
         int highY = 1;
         int lowY = getHeight() - 2;
-
-        lap = lap.lap("create image");
-        ChannelPixel[] pixels = imageCreator.createImage(channel, sampleBufferModel.getView().sampleBuffer, width);
 
         lap = lap.lap("rendering " + pixels.length + " pixels");
 

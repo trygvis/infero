@@ -16,7 +16,7 @@ public class LogicAnalyzer {
     public final List<FormattedInteger> sampleCounts;
 
     public LogicAnalyzer() {
-        this.channels = unmodifiableList(new ArrayList<Channel>(){{
+        this.channels = unmodifiableList(new ArrayList<Channel>() {{
             add(Channel.getBlankChannel(0));
             add(Channel.getBlankChannel(1));
             add(Channel.getBlankChannel(2));
@@ -45,6 +45,7 @@ public class LogicAnalyzer {
 
         this.sampleCounts = unmodifiableList(new ArrayList<FormattedInteger>() {{
             add(siFormattingOf(1000));
+            add(siFormattingOf(2000));
             add(siFormattingOf(1000000));
             add(siFormattingOf(10000000));
             add(siFormattingOf(25000000));

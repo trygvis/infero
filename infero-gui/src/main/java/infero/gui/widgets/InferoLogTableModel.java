@@ -2,7 +2,6 @@ package infero.gui.widgets;
 
 import com.google.inject.*;
 import infero.gui.domain.*;
-import static infero.gui.domain.InferoLogEntry.*;
 
 import javax.swing.table.*;
 import java.util.*;

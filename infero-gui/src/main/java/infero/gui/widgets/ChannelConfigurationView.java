@@ -1,13 +1,11 @@
 package infero.gui.widgets;
 
-import com.jeta.forms.components.panel.FormPanel;
-import infero.gui.domain.Channel;
+import com.jeta.forms.components.panel.*;
+import infero.gui.domain.*;
+import static infero.gui.domain.Channel.Properties.*;
 
 import javax.swing.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
-import static infero.gui.domain.Channel.Properties.*;
+import java.beans.*;
 
 /**
  */

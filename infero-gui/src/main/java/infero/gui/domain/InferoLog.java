@@ -22,7 +22,7 @@ public class InferoLog {
         model.logEntries(entries);
     }
 
-    public void logEntry(InferoLogEntry ... entries) {
+    public void logEntry(InferoLogEntry... entries) {
         for (InferoLogEntry entry : entries) {
             model.logEntry(entry);
         }

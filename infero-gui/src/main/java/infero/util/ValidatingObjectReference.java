@@ -13,7 +13,7 @@ public class ValidatingObjectReference<T> {
     }
 
     public T getObject() {
-        if(valid) {
+        if (valid) {
             return object;
         }
 

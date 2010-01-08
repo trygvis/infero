@@ -82,8 +82,18 @@ public class Lap {
     }
 
     public static class StoppedTimer extends Lap {
+        public final long totalTime;
+
         private StoppedTimer(Lap previous) {
             super(previous, "last lap", previous.round);
+
+            Lap current = this;
+            Lap first = previous;
+            while (current != null) {
+                first = current;
+                current = current.previous;
+            }
+            this.totalTime = time - first.time;
         }
 
         @Override

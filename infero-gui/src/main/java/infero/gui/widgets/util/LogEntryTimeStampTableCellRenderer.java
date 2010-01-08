@@ -24,6 +24,6 @@ public class LogEntryTimeStampTableCellRenderer extends DefaultTableCellRenderer
 
     @Override
     protected void setValue(Object value) {
-        setText(format.format((Date)value));
+        setText(format.format((Date) value));
     }
 }

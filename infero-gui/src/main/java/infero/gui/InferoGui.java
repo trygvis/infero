@@ -1,10 +1,9 @@
 package infero.gui;
 
-import com.google.inject.Module;
-import static java.lang.Boolean.TRUE;
-import net.guts.gui.application.AbstractAppLauncher;
+import com.google.inject.*;
+import net.guts.gui.application.*;
 
-import java.util.List;
+import java.util.*;
 
 public class InferoGui extends AbstractAppLauncher {
     static public void main(String[] args) {

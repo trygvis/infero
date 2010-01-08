@@ -1,18 +1,18 @@
 package infero.gui.domain.services;
 
-import infero.gui.domain.Channel;
-import infero.gui.domain.SampleBuffer;
-import infero.gui.domain.SampleBuffer.Chunk;
-import infero.gui.domain.services.ChannelImageCreator.ChannelPixel;
-import infero.util.Lap;
-import org.junit.Test;
+import infero.gui.domain.*;
+import static infero.gui.domain.Channel.*;
+import infero.gui.domain.SampleBuffer.*;
+import infero.gui.domain.services.ChannelImageCreator.*;
+import static infero.gui.domain.services.ChannelImageCreator.ChannelPixel.*;
+import infero.util.*;
+import static infero.util.Lap.*;
+import static infero.util.NanoSeconds.*;
+import static infero.util.NumberFormats.*;
+import static org.junit.Assert.*;
+import org.junit.*;
 
-import java.util.Arrays;
-
-import static infero.gui.domain.Channel.getBlankChannel;
-import static infero.gui.domain.services.ChannelImageCreator.ChannelPixel.HIGH;
-import static infero.util.Lap.startTimer;
-import static org.junit.Assert.assertEquals;
+import java.util.*;
 
 public class ChannelImageCreatorTest {
     @Test
@@ -22,18 +22,20 @@ public class ChannelImageCreatorTest {
         Channel channel7 = getBlankChannel(7);
 
         byte[] values = new byte[100];
-        Arrays.fill(values, (byte)0xf0);
+        Arrays.fill(values, (byte) 0xf0);
         SampleBuffer sampleBuffer = new SampleBuffer(values, 1000);
 
-        Chunk[] chunks = sampleBuffer.createChunks(0, sampleBuffer.size() - 1, 10);
+        NanoSeconds startTime = nanoSeconds(0);
+        NanoSeconds endTime = sampleBuffer.timespan;
+        Chunk[] chunks = sampleBuffer.createChunks(startTime, endTime, 10);
 
         values[chunks[2].start] |= 1 << channel1.index;
 
         ChannelImageCreator imageCreator = new ChannelImageCreator();
 
-        ChannelPixel[] pixels0 = imageCreator.createImage(channel0, sampleBuffer, 10);
-        ChannelPixel[] pixels1 = imageCreator.createImage(channel1, sampleBuffer, 10);
-        ChannelPixel[] pixels7 = imageCreator.createImage(channel7, sampleBuffer, 10);
+        ChannelPixel[] pixels0 = imageCreator.createImage(values, chunks, channel0, 10);
+        ChannelPixel[] pixels1 = imageCreator.createImage(values, chunks, channel1, 10);
+        ChannelPixel[] pixels7 = imageCreator.createImage(values, chunks, channel7, 10);
 
         assertEquals(10, pixels0.length);
 
@@ -43,10 +45,9 @@ public class ChannelImageCreatorTest {
 
         for (int i = 0, pixels1Length = pixels1.length; i < pixels1Length; i++) {
             ChannelPixel pixel = pixels1[i];
-            if(i == 2) {
+            if (i == 2) {
                 assertEquals(ChannelPixel.BOTH, pixel);
-            }
-            else {
+            } else {
                 assertEquals(ChannelPixel.LOW, pixel);
             }
         }
@@ -60,28 +61,34 @@ public class ChannelImageCreatorTest {
     public void testLots() {
         Channel channel0 = getBlankChannel(0);
 
-        Lap lap = startTimer("memory allocation");
-
         byte[] values = new byte[1000 * 1000 * 8];
 
-        lap = lap.lap("memory fill");
-        Arrays.fill(values, (byte)0xf0);
+        Arrays.fill(values, (byte) 0xf0);
         SampleBuffer sampleBuffer = new SampleBuffer(values, 1000);
 
-        lap = lap.lap("Create chunks");
+        NanoSeconds startTime = nanoSeconds(0);
+        NanoSeconds endTime = sampleBuffer.timespan;
+        int width = 1000;
+        Chunk[] chunks = sampleBuffer.createChunks(startTime, endTime, width);
 
         ChannelImageCreator imageCreator = new ChannelImageCreator();
 
-        lap = lap.lap("Create image");
-        ChannelPixel[] pixels0 = imageCreator.createImage(channel0, sampleBuffer, 10);
+        for (int i = 0; i < 1000; i++) {
 
-        assertEquals(10, pixels0.length);
+            Lap lap = startTimer("Create image");
+            ChannelPixel[] pixels0 = imageCreator.createImage(values, chunks, channel0, width);
 
-        for (ChannelPixel pixel : pixels0) {
-            assertEquals(ChannelPixel.LOW, pixel);
+            assertEquals(width, pixels0.length);
+
+            for (ChannelPixel pixel : pixels0) {
+                assertEquals(ChannelPixel.LOW, pixel);
+            }
+
+            StoppedTimer stoppedTimer = lap.done();
+//            System.out.println("stoppedTimer.totalTime = " + nanoTimeFormattingOf(stoppedTimer.totalTime));
+//            for (String s : longFormatting(stoppedTimer)) {
+//                System.out.println(s);
+//            }
         }
-
-        lap = lap.lap("Asserts");
-        lap.println(System.out);
     }
 }

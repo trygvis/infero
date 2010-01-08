@@ -7,9 +7,10 @@ import java.awt.*;
 public class SampleView {
     public final SampleBuffer sampleBuffer;
     public final int viewWidth;
-    public final NanoSeconds timePerPixel;
     public final double zoom;
     private final int mouseX;
+
+    public final NanoSeconds timePerPixel;
 
     public SampleView(SampleBuffer sampleBuffer, int viewWidth, double zoom, Point mousePosition) {
         this.sampleBuffer = sampleBuffer;
@@ -28,6 +29,6 @@ public class SampleView {
     }
 
     public byte getMouseValue() {
-        return sampleBuffer.getSample((int) (((double) sampleBuffer.size() *  mouseX) / viewWidth));
+        return sampleBuffer.getSample((int) (((double) sampleBuffer.size() * mouseX) / viewWidth));
     }
 }

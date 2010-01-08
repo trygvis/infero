@@ -24,33 +24,40 @@ public class LogicAnalyzerActions {
     public final GutsAction simulate = new GutsAction("action.simulate") {
         @Override
         protected void perform() {
-            final MainView mainView = LogicAnalyzerActions.this.mainView.get();
-
             getDefaultTaskService().execute(new Task<Object, Object>() {
                 public Object doInBackground(TaskController<Object> publisher) throws Exception {
-                    inferoLog.logEntry(info("Generating samples."));
-
-                    byte[] samples = new byte[mainView.getSelectedSampleCount()];
-
-                    inferoLog.logEntry(info("Generating %d samples.", samples.length));
-
                     try {
-                        for (int i = 0, samplesLength = samples.length; i < samplesLength; i++) {
-                            samples[i] = (byte) (i & 0xff);
-                        }
-
-                        int samplesPerSecond = mainView.getSelectedSampleRate();
-
-                        sampleBufferModel.setViewWidth(mainView.getTracePanelWidth());
-
-                        sampleBufferModel.setSample(new SampleBuffer(samples, samplesPerSecond));
+                        runGenerateSamples();
                     } catch (Throwable e) {
                         e.printStackTrace(System.out);
                     }
-
                     return null;
                 }
             }, this, GlassPaneBlocker.class);
         }
     };
+
+    private void runGenerateSamples() {
+        final MainView mainView = this.mainView.get();
+
+        inferoLog.logEntry(info("Generating samples."));
+
+        byte[] samples = new byte[mainView.getSelectedSampleCount()];
+
+        inferoLog.logEntry(info("Generating %d samples.", samples.length));
+
+        try {
+            for (int i = 0, samplesLength = samples.length; i < samplesLength; i++) {
+                samples[i] = (byte) (i & 0xff);
+            }
+
+            int samplesPerSecond = mainView.getSelectedSampleRate();
+
+            sampleBufferModel.setViewWidth(mainView.getTracePanelWidth());
+
+            sampleBufferModel.setSample(new SampleBuffer(samples, samplesPerSecond));
+        } catch (Throwable e) {
+            e.printStackTrace(System.out);
+        }
+    }
 }

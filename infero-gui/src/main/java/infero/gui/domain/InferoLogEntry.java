@@ -1,6 +1,6 @@
 package infero.gui.domain;
 
-import static java.lang.String.format;
+import static java.lang.String.*;
 
 import java.util.*;
 
@@ -13,7 +13,7 @@ public class InferoLogEntry {
         this.text = text;
     }
 
-    public static InferoLogEntry info(String text, Object ... args) {
+    public static InferoLogEntry info(String text, Object... args) {
         return new InferoLogEntry(new Date(), format(text, args));
     }
 

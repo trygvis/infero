@@ -10,7 +10,7 @@ import static infero.gui.domain.SampleBufferModel.Properties.*;
 import static infero.gui.widgets.MainView.Names.*;
 import infero.gui.widgets.util.*;
 import infero.util.*;
-import static infero.util.NumberFormats.siFormattingOf;
+import static infero.util.NumberFormats.*;
 import static java.lang.Integer.*;
 import static java.lang.String.*;
 import static javax.swing.JTable.*;
@@ -38,6 +38,7 @@ public class MainView extends FormPanel {
         public static final String ID_VALUE_BINARY = "value.binary";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_TIME_PER_PIXEL = "time.per.pixel";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_TIME = "time";  //com.jeta.forms.components.label.JETALabel
+        public static final String ID_PIXELS = "pixels";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_LOG_FORM = "log.form";  //javax.swing.JPanel
         public static final String ID_CLEAR_BUTTON = "clear.button";  //javax.swing.JButton
         public static final String ID_SAMPLE_COUNT = "sample.count";  //javax.swing.JComboBox
@@ -66,6 +67,7 @@ public class MainView extends FormPanel {
     private final JLabel time;
     private final JLabel timespan;
     private final JLabel timePerPixel;
+    private final JLabel pixels;
 
     private final JSlider zoomSlider;
     private final JScrollBar timelineScrollbar;
@@ -103,6 +105,7 @@ public class MainView extends FormPanel {
         time = getLabel(ID_TIME);
         timespan = getLabel(ID_TIMESPAN);
         timePerPixel = getLabel(ID_TIME_PER_PIXEL);
+        pixels = getLabel(ID_PIXELS);
 
         zoomSlider = (JSlider) getComponentByName(ID_ZOOM_SLIDER);
         timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
@@ -159,7 +162,7 @@ public class MainView extends FormPanel {
                 throw new RuntimeException("No such channel: 'channel." + channel.index + ".trace'.");
             }
             tracesForm.replaceBean("channel." + channel.index + ".trace", channelTrace);
-            if(first == null) {
+            if (first == null) {
                 first = channelTrace;
             }
         }
@@ -270,7 +273,7 @@ public class MainView extends FormPanel {
 
                 int total = (int) memoryUsageModel.getTotal();
                 progressBar.setMaximum(total);
-                progressBar.setValue(total - (int)memoryUsageModel.getFree());
+                progressBar.setValue(total - (int) memoryUsageModel.getFree());
                 progressBar.setToolTipText(toolTip);
             }
         });
@@ -283,7 +286,7 @@ public class MainView extends FormPanel {
         time.setText(sampleView.getMouseTime().toString());
         timespan.setText(sampleView.sampleBuffer.timespan.toString());
         timePerPixel.setText(sampleView.timePerPixel.toString());
-        time.setText(sampleView.getMouseTime().toString());
+        pixels.setText(String.valueOf(sampleView.viewWidth));
 
         int i = 0xff & sampleView.getMouseValue();
         String b = Integer.toBinaryString(i);
@@ -344,7 +347,7 @@ public class MainView extends FormPanel {
     public int getTracePanelWidth() {
         return firstChannelTracePanel.getWidth();
     }
-    
+
     /**
      * This doesn't exactly work as advertised, it only scrolls to the second to last entry.
      */

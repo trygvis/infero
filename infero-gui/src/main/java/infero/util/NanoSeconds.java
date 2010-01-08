@@ -37,6 +37,10 @@ public class NanoSeconds {
         return new NanoSeconds(value.numeric * factor.value.numeric);
     }
 
+    public long dividedBy(NanoSeconds divisor) {
+        return value.numeric / divisor.value.numeric;
+    }
+
     public NanoSeconds dividedBy(long divisor) {
         return new NanoSeconds(value.numeric / divisor);
     }
@@ -68,5 +72,9 @@ public class NanoSeconds {
 
     public String toString() {
         return value.text;
+    }
+
+    public boolean isAfter(NanoSeconds other) {
+        return this.value.numeric > other.value.numeric;
     }
 }

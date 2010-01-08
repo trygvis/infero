@@ -1,8 +1,7 @@
 package infero.gui.domain;
 
-import infero.gui.domain.Channel.Properties;
-
-import static infero.gui.domain.Channel.Properties.NAME;
+import infero.gui.domain.Channel.*;
+import static infero.gui.domain.Channel.Properties.*;
 
 public class Channel extends AbstractDomainObject<Properties> {
     public final int index;
