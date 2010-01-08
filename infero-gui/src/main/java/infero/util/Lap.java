@@ -41,10 +41,10 @@ public class Lap {
 
     public String toString() {
         if (previous == null) {
-            return "Start: " + name;
+            return "Start" + (name == null ? "" : ": " + name);
         }
 
-        String prefix = name + " took ";
+        String prefix = (name != null ? name : "lap #" + (round - 1)) + " took ";
         long diff = time - previous.time;
 
         String unit;
@@ -66,7 +66,7 @@ public class Lap {
             unit = "ns";
         }
 
-        return prefix + " " + diff + unit;
+        return prefix + diff + unit;
     }
 
     public void println(PrintStream out) {
