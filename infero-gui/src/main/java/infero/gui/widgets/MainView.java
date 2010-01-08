@@ -262,7 +262,8 @@ public class MainView extends FormPanel {
         progressBar.setEnabled(true);
         memoryUsageModel.addPropertyChangeListener(FREE, new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent evt) {
-                String toolTip = format("Max=%s, total=%s, free=%s",
+                String toolTip = format("Used=%s, max=%s, total=%s, free=%s",
+                        siFormattingOf(memoryUsageModel.getUsed()),
                         siFormattingOf(memoryUsageModel.getMax()),
                         siFormattingOf(memoryUsageModel.getTotal()),
                         siFormattingOf(memoryUsageModel.getFree()));
