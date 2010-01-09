@@ -7,18 +7,22 @@ import java.awt.*;
 public class SampleView {
     public final SampleBuffer sampleBuffer;
     public final int viewWidth;
-    public final double zoom;
+    public final int zoom;
+
+    // TODO: the mouse info should not be here
     private final int mouseX;
 
     public final NanoSeconds timePerPixel;
+    public final NanoSeconds timePerSample;
 
-    public SampleView(SampleBuffer sampleBuffer, int viewWidth, double zoom, Point mousePosition) {
+    public SampleView(SampleBuffer sampleBuffer, int viewWidth, int zoom, Point mousePosition) {
         this.sampleBuffer = sampleBuffer;
         this.viewWidth = viewWidth;
         this.zoom = zoom;
         this.mouseX = mousePosition.x;
 
         this.timePerPixel = sampleBuffer.timespan.dividedBy(viewWidth);
+        this.timePerSample = sampleBuffer.timePerSample;
     }
 
     /**

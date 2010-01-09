@@ -1,7 +1,6 @@
 package infero.gui;
 
 import com.google.inject.*;
-import infero.gui.action.*;
 import infero.gui.domain.*;
 import static infero.gui.domain.InferoLogEntry.*;
 import infero.gui.widgets.*;
@@ -9,38 +8,31 @@ import static javax.swing.UIManager.*;
 import net.guts.gui.application.*;
 import net.guts.gui.application.WindowController.*;
 import net.guts.gui.exit.*;
-import net.guts.gui.menu.*;
 
 import javax.swing.*;
 import java.awt.event.*;
 
 public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final WindowController windowController;
-    private final MenuFactory menuFactory;
     private final ExitController exitController;
-    private final GutsApplicationActions appActions;
     private final MainView mainView;
+    private final MainMenuBar mainMenuBar;
     private final MemoryUsageModel memoryUsageModel;
     private final InferoLog inferoLog;
-    private final LogicAnalyzerActions logicAnalyzerActions;
 
     @Inject
     public InferoLifecycleStarter(WindowController windowController,
-                                  MenuFactory menuFactory,
                                   ExitController exitController,
-                                  GutsApplicationActions appActions,
                                   MainView mainView,
+                                  MainMenuBar mainMenuBar,
                                   MemoryUsageModel memoryUsageModel,
-                                  InferoLog inferoLog,
-                                  LogicAnalyzerActions logicAnalyzerActions) {
+                                  InferoLog inferoLog) {
         this.windowController = windowController;
-        this.menuFactory = menuFactory;
         this.exitController = exitController;
-        this.appActions = appActions;
         this.mainView = mainView;
+        this.mainMenuBar = mainMenuBar;
         this.memoryUsageModel = memoryUsageModel;
         this.inferoLog = inferoLog;
-        this.logicAnalyzerActions = logicAnalyzerActions;
     }
 
     public void startup(String[] args) {
@@ -66,17 +58,11 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
         thread.setDaemon(true);
         thread.start();
 
-        JMenuBar menuBar = new JMenuBar();
-        menuBar.add(menuFactory.createMenu("menu.file",
-                logicAnalyzerActions.simulate,
-                MenuFactory.ACTION_SEPARATOR,
-                appActions.quit()));
-
         JFrame mainFrame = new JFrame();
 
         mainFrame.setName("mainFrame");
         mainFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        mainFrame.setJMenuBar(menuBar);
+        mainFrame.setJMenuBar(mainMenuBar);
         mainFrame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent arg0) {

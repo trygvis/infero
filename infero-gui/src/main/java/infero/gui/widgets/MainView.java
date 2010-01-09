@@ -11,7 +11,6 @@ import static infero.gui.widgets.MainView.Names.*;
 import infero.gui.widgets.util.*;
 import infero.util.*;
 import static infero.util.NumberFormats.*;
-import static java.lang.Integer.*;
 import static java.lang.String.*;
 import static javax.swing.JTable.*;
 import net.guts.gui.action.*;
@@ -27,7 +26,6 @@ import java.util.*;
 @Singleton
 public class MainView extends FormPanel {
     public static class Names {
-        public static final String ID_ZOOM_SLIDER = "zoom.slider";  //javax.swing.JSlider
         public static final String ID_TIMELINE = "timeline";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_TIME_SCROLLBAR = "time.scrollbar";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_ZOOM = "zoom";  //com.jeta.forms.components.label.JETALabel
@@ -39,6 +37,7 @@ public class MainView extends FormPanel {
         public static final String ID_TIME_PER_PIXEL = "time.per.pixel";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_TIME = "time";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_PIXELS = "pixels";  //com.jeta.forms.components.label.JETALabel
+        public static final String ID_TIME_PER_SAMPLE = "time.per.sample";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_LOG_FORM = "log.form";  //javax.swing.JPanel
         public static final String ID_CLEAR_BUTTON = "clear.button";  //javax.swing.JButton
         public static final String ID_SAMPLE_COUNT = "sample.count";  //javax.swing.JComboBox
@@ -67,9 +66,9 @@ public class MainView extends FormPanel {
     private final JLabel time;
     private final JLabel timespan;
     private final JLabel timePerPixel;
+    private final JLabel timePerSample;
     private final JLabel pixels;
 
-    private final JSlider zoomSlider;
     private final JScrollBar timelineScrollbar;
 
     private final JTable logTable;
@@ -105,9 +104,9 @@ public class MainView extends FormPanel {
         time = getLabel(ID_TIME);
         timespan = getLabel(ID_TIMESPAN);
         timePerPixel = getLabel(ID_TIME_PER_PIXEL);
+        timePerSample = getLabel(ID_TIME_PER_SAMPLE);
         pixels = getLabel(ID_PIXELS);
 
-        zoomSlider = (JSlider) getComponentByName(ID_ZOOM_SLIDER);
         timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
 
         // There's something fishy with the table we're getting from JETA
@@ -190,12 +189,6 @@ public class MainView extends FormPanel {
     }
 
     private void initializeSliders() {
-        zoomSlider.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                sampleBufferModel.setZoom(zoomSlider.getValue());
-            }
-        });
-
         FormAccessor topForm = getFormAccessor();
 
         topForm.replaceBean(ID_TIME_SCROLLBAR, timelineScrollbar);
@@ -280,12 +273,13 @@ public class MainView extends FormPanel {
     }
 
     private void updateStatusPanel(SampleView sampleView) {
-        zoom.setText("" + sampleView.zoom);
+        zoom.setText(String.valueOf(sampleView.zoom));
 
         // This has to be a bit smarter, has to show more precision
         time.setText(sampleView.getMouseTime().toString());
         timespan.setText(sampleView.sampleBuffer.timespan.toString());
         timePerPixel.setText(sampleView.timePerPixel.toString());
+        timePerSample.setText(sampleView.timePerSample.toString());
         pixels.setText(String.valueOf(sampleView.viewWidth));
 
         int i = 0xff & sampleView.getMouseValue();
@@ -293,9 +287,9 @@ public class MainView extends FormPanel {
         b = "00000000".substring(0, 8 - b.length()) + b;
 
         decimal.setText(Integer.toString(i));
-        hex.setText((i > 0x0f ? "0x" : "0x0") + toHexString(i));
+        hex.setText((i > 0x0f ? "0x" : "0x0") + Integer.toHexString(i));
         binary.setText(b + "b");
-        octal.setText(toOctalString(i));
+        octal.setText(Integer.toOctalString(i));
     }
 
     // -----------------------------------------------------------------------
@@ -303,7 +297,6 @@ public class MainView extends FormPanel {
     // -----------------------------------------------------------------------
 
     private void onSampleValuesUpdated() {
-        zoomSlider.setEnabled(true);
         timelineScrollbar.setEnabled(true);
     }
 
@@ -316,20 +309,7 @@ public class MainView extends FormPanel {
         binary.setText("-");
         binary.setText("-");
 
-        zoomSlider.setEnabled(false);
         timelineScrollbar.setEnabled(false);
-    }
-
-    private void onZoomChanged(JLabel zoom, JSlider zoomSlider) {
-        if (!sampleBufferModel.isValid()) {
-            return;
-        }
-
-        SampleView sampleView = sampleBufferModel.getView();
-        zoom.setText("zoom=" + sampleView.zoom + ", time/px=" + sampleView.timePerPixel);
-    }
-
-    private void onTimelineChanged() {
     }
 
     // -----------------------------------------------------------------------
@@ -358,5 +338,4 @@ public class MainView extends FormPanel {
 
         logTable.scrollRectToVisible(new Rectangle(width, height, width, height));
     }
-
 }

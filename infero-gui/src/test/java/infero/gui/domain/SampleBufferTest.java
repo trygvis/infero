@@ -101,7 +101,6 @@ public class SampleBufferTest {
 
         SampleBufferModel sampleBufferModel = new SampleBufferModel(new ChannelImageCreator(), new LogicAnalyzer());
         sampleBufferModel.setSample(sampleBuffer);
-        sampleBufferModel.setZoom(1);
         sampleBufferModel.setViewWidth(100);
         sampleBufferModel.setMousePosition(new Point(50, 0));
 

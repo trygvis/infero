@@ -32,6 +32,8 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
      */
     private int zoom = 1;
 
+    private int maxZoom = 10;
+
     private Point mousePosition;
 
     /**
@@ -53,10 +55,36 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
         this.logicAnalyzer = logicAnalyzer;
     }
 
-    public void setZoom(int zoom) {
+    public void zoomIn() {
+        if(!canZoomIn()) {
+            throw new RuntimeException("Can't zoom more in.");
+        }
+        onZoomUpdated(zoom * 2);
+    }
+
+    public boolean canZoomIn() {
+        return zoom <= maxZoom;
+    }
+
+    public void zoomOut() {
+        if(!canZoomOut()) {
+            throw new RuntimeException("Can't zoom more out.");
+        }
+        onZoomUpdated(zoom / 2);
+    }
+
+    public boolean canZoomOut() {
+        return zoom > 1;
+    }
+
+    private void onZoomUpdated(int zoom) {
+        if(!isValid()) {
+            return;
+        }
         pixels = new Pixels();
-        // TODO: Update endTime
-        firePropertyChange(ZOOM, this.zoom, this.zoom = zoom);
+        startTime = nanoSeconds(0);
+        endTime = sampleBuffer.timespan;
+        firePropertyChange(ZOOM, 0, this.zoom = zoom);
     }
 
     public void setMousePosition(Point mousePosition) {
@@ -72,9 +100,12 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
 
     public void setSample(SampleBuffer sampleBuffer) {
         pixels = new Pixels();
-        startTime = nanoSeconds(0);
-        endTime = sampleBuffer.timespan;
-        firePropertyChange(SAMPLE_BUFFER, this.sampleBuffer, this.sampleBuffer = sampleBuffer);
+        maxZoom = 10; // TODO: This has to be calculated. At the max zoom level it should show 50 px per sample.
+        SampleBuffer oldSampleBuffer = this.sampleBuffer;
+        this.sampleBuffer = sampleBuffer;
+        this.mousePosition = new Point(0, 0);
+        onZoomUpdated(1);
+        firePropertyChange(SAMPLE_BUFFER, this.sampleBuffer, oldSampleBuffer);
     }
 
     public boolean isValid() {

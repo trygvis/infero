@@ -3,39 +3,82 @@ package infero.gui.action;
 import com.google.inject.*;
 import infero.gui.domain.*;
 import static infero.gui.domain.InferoLogEntry.*;
+import static infero.gui.domain.SampleBufferModel.Properties.ZOOM;
 import infero.gui.widgets.*;
 import net.guts.gui.action.*;
 import net.guts.gui.action.blocker.*;
+
+import java.beans.*;
 
 public class LogicAnalyzerActions {
     private final InferoLog inferoLog;
     private final SampleBufferModel sampleBufferModel;
     private final Provider<MainView> mainView;
 
+    public final GutsAction simulate;
+    public final GutsAction zoomIn;
+    public final GutsAction zoomOut;
+
     @Inject
     public LogicAnalyzerActions(InferoLog inferoLog,
-                                SampleBufferModel sampleBufferModel,
+                                final SampleBufferModel sampleBufferModel,
                                 Provider<MainView> mainView) {
         this.inferoLog = inferoLog;
         this.sampleBufferModel = sampleBufferModel;
         this.mainView = mainView;
+
+        simulate = new GutsAction("action.simulate") {
+            @Override
+            protected void perform() {
+                getDefaultTaskService().execute(new Task<Object, Object>() {
+                    public Object doInBackground(TaskController<Object> publisher) throws Exception {
+                        try {
+                            runGenerateSamples();
+                        } catch (Throwable e) {
+                            e.printStackTrace(System.out);
+                        }
+                        return null;
+                    }
+                }, this, GlassPaneBlocker.class);
+            }
+        };
+
+        zoomIn = new GutsAction("action.zoomIn") {
+            {
+                sampleBufferModel.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        action().setEnabled(sampleBufferModel.canZoomIn());
+                    }
+                });
+                action().setEnabled(false);
+            }
+
+            @Override
+            protected void perform() {
+                sampleBufferModel.zoomIn();
+            }
+        };
+
+        zoomOut = new GutsAction("action.zoomOut") {
+            {
+                sampleBufferModel.addPropertyChangeListener(ZOOM, new PropertyChangeListener() {
+                    public void propertyChange(PropertyChangeEvent evt) {
+                        action().setEnabled(sampleBufferModel.canZoomOut());
+                    }
+                });
+                action().setEnabled(false);
+            }
+
+            @Override
+            protected void perform() {
+                sampleBufferModel.zoomOut();
+            }
+        };
     }
 
-    public final GutsAction simulate = new GutsAction("action.simulate") {
-        @Override
-        protected void perform() {
-            getDefaultTaskService().execute(new Task<Object, Object>() {
-                public Object doInBackground(TaskController<Object> publisher) throws Exception {
-                    try {
-                        runGenerateSamples();
-                    } catch (Throwable e) {
-                        e.printStackTrace(System.out);
-                    }
-                    return null;
-                }
-            }, this, GlassPaneBlocker.class);
-        }
-    };
+    // -----------------------------------------------------------------------
+    // Action Implementations
+    // -----------------------------------------------------------------------
 
     private void runGenerateSamples() {
         final MainView mainView = this.mainView.get();

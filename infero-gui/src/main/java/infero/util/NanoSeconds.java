@@ -49,6 +49,10 @@ public class NanoSeconds {
         return new NanoSeconds((long) (((double) value.numeric) / divisor));
     }
 
+    public boolean isAfter(NanoSeconds other) {
+        return this.value.numeric > other.value.numeric;
+    }
+
     public long asLong() {
         return value.numeric;
     }
@@ -72,9 +76,5 @@ public class NanoSeconds {
 
     public String toString() {
         return value.text;
-    }
-
-    public boolean isAfter(NanoSeconds other) {
-        return this.value.numeric > other.value.numeric;
     }
 }
