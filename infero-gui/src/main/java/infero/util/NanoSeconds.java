@@ -25,7 +25,7 @@ public class NanoSeconds {
         return new NanoSeconds(microSeconds * 1000);
     }
 
-    public static NanoSeconds nanoSeconds(int nanoSeconds) {
+    public static NanoSeconds nanoSeconds(long nanoSeconds) {
         return new NanoSeconds(nanoSeconds);
     }
 

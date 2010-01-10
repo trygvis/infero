@@ -8,7 +8,6 @@ import static infero.gui.domain.services.ChannelImageCreator.ChannelPixel.*;
 import infero.util.*;
 import static infero.util.Lap.*;
 import static infero.util.NanoSeconds.*;
-import static infero.util.NumberFormats.*;
 import static org.junit.Assert.*;
 import org.junit.*;
 

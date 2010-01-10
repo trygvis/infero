@@ -17,6 +17,8 @@ import java.awt.*;
 @Singleton
 public class SampleBufferModel extends AbstractDomainObject<Properties> {
 
+    private static final Point POINT_ZERO = new Point(0, 0);
+
     public enum Properties {
         SAMPLE_BUFFER,
         ZOOM,
@@ -56,7 +58,7 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
     }
 
     public void zoomIn() {
-        if(!canZoomIn()) {
+        if (!canZoomIn()) {
             throw new RuntimeException("Can't zoom more in.");
         }
         onZoomUpdated(zoom * 2);
@@ -67,7 +69,7 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
     }
 
     public void zoomOut() {
-        if(!canZoomOut()) {
+        if (!canZoomOut()) {
             throw new RuntimeException("Can't zoom more out.");
         }
         onZoomUpdated(zoom / 2);
@@ -78,12 +80,20 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
     }
 
     private void onZoomUpdated(int zoom) {
-        if(!isValid()) {
+        if (!isValid()) {
             return;
         }
         pixels = new Pixels();
-        startTime = nanoSeconds(0);
-        endTime = sampleBuffer.timespan;
+
+        // Zoom in on where the mouse is if it's over the trace panel
+        if (!mousePosition.equals(POINT_ZERO)) {
+            startTime = getView().getMouseTime();
+        }
+
+        endTime = sampleBuffer.timespan.dividedBy(zoom);
+
+        // TODO: Adjust for the endTime being after the timespan. Should probably adjust the startTime.
+
         firePropertyChange(ZOOM, 0, this.zoom = zoom);
     }
 
@@ -104,6 +114,7 @@ public class SampleBufferModel extends AbstractDomainObject<Properties> {
         SampleBuffer oldSampleBuffer = this.sampleBuffer;
         this.sampleBuffer = sampleBuffer;
         this.mousePosition = new Point(0, 0);
+        startTime = nanoSeconds(0);
         onZoomUpdated(1);
         firePropertyChange(SAMPLE_BUFFER, this.sampleBuffer, oldSampleBuffer);
     }

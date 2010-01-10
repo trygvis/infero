@@ -60,5 +60,6 @@
   </build>
   <modules>
     <module>infero-gui</module>
+    <module>infero-resources</module>
   </modules>
 </project>

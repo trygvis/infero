@@ -1,19 +1,24 @@
 package infero.gui.widgets;
 
 import com.google.inject.*;
+import com.jeta.forms.components.image.*;
 import com.jeta.forms.components.panel.*;
 import com.jeta.forms.gui.form.*;
 import infero.gui.action.*;
 import infero.gui.domain.*;
+import static infero.gui.domain.ExceptionListModel.Properties.*;
 import static infero.gui.domain.MemoryUsageModel.Properties.*;
 import static infero.gui.domain.SampleBufferModel.Properties.*;
 import static infero.gui.widgets.MainView.Names.*;
+import infero.gui.widgets.error.*;
 import infero.gui.widgets.util.*;
 import infero.util.*;
 import static infero.util.NumberFormats.*;
 import static java.lang.String.*;
 import static javax.swing.JTable.*;
 import net.guts.gui.action.*;
+import net.guts.gui.application.*;
+import net.guts.gui.application.WindowController.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -25,8 +30,7 @@ import java.util.*;
 
 @Singleton
 public class MainView extends FormPanel {
-    public static class Names {
-        public static final String ID_TIMELINE = "timeline";  //com.jeta.forms.components.label.JETALabel
+    protected static class Names {
         public static final String ID_TIME_SCROLLBAR = "time.scrollbar";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_ZOOM = "zoom";  //com.jeta.forms.components.label.JETALabel
         public static final String ID_VALUE_DECIMAL = "value.decimal";  //com.jeta.forms.components.label.JETALabel
@@ -45,6 +49,7 @@ public class MainView extends FormPanel {
         public static final String ID_SIMULATE_BUTTON = "simulate.button";  //javax.swing.JButton
         public static final String ID_TRACES = "traces";  //javax.swing.JPanel
         public static final String ID_MEMORY_USAGE = "memory.usage";  //javax.swing.JProgressBar
+        public static final String ID_ERROR_INDICATOR = "error.indicator";  //com.jeta.forms.components.image.ImageComponent
 
         // Custom - this was not copied from the name export - bug?
         public static final String ID_LOG_TABLE_SCROLL_PANE = "log.table.scroll.pane";
@@ -69,6 +74,11 @@ public class MainView extends FormPanel {
     private final JLabel timePerSample;
     private final JLabel pixels;
 
+    // Error
+    private final Icon smileIcon;
+    private final Icon sadIcon;
+    private final ImageComponent errorIndicator;
+
     private final JScrollBar timelineScrollbar;
 
     private final JTable logTable;
@@ -84,9 +94,12 @@ public class MainView extends FormPanel {
                     LogicAnalyzer logicAnalyzer,
                     InferoLogTableModel inferoLogTableModel,
                     MemoryUsageModel memoryUsageModel,
+                    final ExceptionListModel exceptionListModel,
+                    final ErrorFrame errorFrame,
                     LogicAnalyzerActions logicAnalyzerActions,
                     LogActions logActions,
-                    ChannelTracePanelFactory channelTracePanelProviderFactory) {
+                    ChannelTracePanelFactory channelTracePanelProviderFactory,
+                    final WindowController windowController) {
         super("MainView.jfrm");
         this.sampleBufferModel = sampleBufferModel;
         this.logicAnalyzer = logicAnalyzer;
@@ -107,6 +120,10 @@ public class MainView extends FormPanel {
         timePerSample = getLabel(ID_TIME_PER_SAMPLE);
         pixels = getLabel(ID_PIXELS);
 
+        smileIcon = new ImageIcon(getClass().getResource("/share/icons/Tango/16x16/emotes/face-smile.png"));
+        sadIcon = new ImageIcon(getClass().getResource("/share/icons/Tango/16x16/emotes/face-sad.png"));
+        errorIndicator = (ImageComponent) getComponentByName(ID_ERROR_INDICATOR);
+
         timelineScrollbar = new JScrollBar(JScrollBar.HORIZONTAL);
 
         // There's something fishy with the table we're getting from JETA
@@ -121,6 +138,7 @@ public class MainView extends FormPanel {
         initializeSampleBufferModel(sampleBufferModel);
         initializeLog(logActions.clearLogEntriesAction);
         initializeMemoryUsage(memoryUsageModel, getProgressBar(ID_MEMORY_USAGE));
+        initializeErrorIndicator(windowController, errorFrame, exceptionListModel);
     }
 
     private void initializeHeader(GutsAction simulateAction) {
@@ -268,6 +286,33 @@ public class MainView extends FormPanel {
                 progressBar.setMaximum(total);
                 progressBar.setValue(total - (int) memoryUsageModel.getFree());
                 progressBar.setToolTipText(toolTip);
+            }
+        });
+    }
+
+    private void initializeErrorIndicator(final WindowController windowController,
+                                          final ErrorFrame errorFrame,
+                                          final ExceptionListModel exceptionListModel) {
+        errorIndicator.setEnabled(true);
+
+        MouseAdapter adapter = new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                // TODO: Make sure the frame ends up on top of all the other frames
+                if (errorFrame.isVisible()) {
+                    errorFrame.setVisible(false);
+                } else {
+                    windowController.show(errorFrame, BoundsPolicy.PACK_AND_CENTER);
+                }
+            }
+        };
+        errorIndicator.addMouseListener(adapter);
+
+        exceptionListModel.addPropertyChangeListener(EXCEPTION_COUNT, new PropertyChangeListener() {
+            public void propertyChange(PropertyChangeEvent evt) {
+                // TODO: Add an option in the application to show the error frame automatically
+
+                errorIndicator.setIcon(exceptionListModel.getCount() > 0 ? sadIcon : smileIcon);
+                errorIndicator.repaint();
             }
         });
     }

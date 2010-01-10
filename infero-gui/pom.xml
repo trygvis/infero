@@ -9,6 +9,12 @@
   <name>Infero :: GUI</name>
   <dependencies>
     <dependency>
+      <groupId>infero</groupId>
+      <artifactId>infero-resources</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
       <version>0.9.18</version>

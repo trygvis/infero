@@ -3,7 +3,7 @@ package infero.gui.action;
 import com.google.inject.*;
 import infero.gui.domain.*;
 import static infero.gui.domain.InferoLogEntry.*;
-import static infero.gui.domain.SampleBufferModel.Properties.ZOOM;
+import static infero.gui.domain.SampleBufferModel.Properties.*;
 import infero.gui.widgets.*;
 import net.guts.gui.action.*;
 import net.guts.gui.action.blocker.*;
@@ -34,8 +34,10 @@ public class LogicAnalyzerActions {
                     public Object doInBackground(TaskController<Object> publisher) throws Exception {
                         try {
                             runGenerateSamples();
-                        } catch (Throwable e) {
-                            e.printStackTrace(System.out);
+                        } catch (RuntimeException e) {
+                            System.out.println("LogicAnalyzerActions.doInBackground: RuntimeException");
+//                            e.printStackTrace(System.out);
+                            throw e;
                         }
                         return null;
                     }
@@ -80,6 +82,7 @@ public class LogicAnalyzerActions {
     // Action Implementations
     // -----------------------------------------------------------------------
 
+    // TODO: This should be a Task
     private void runGenerateSamples() {
         final MainView mainView = this.mainView.get();
 
@@ -89,18 +92,14 @@ public class LogicAnalyzerActions {
 
         inferoLog.logEntry(info("Generating %d samples.", samples.length));
 
-        try {
-            for (int i = 0, samplesLength = samples.length; i < samplesLength; i++) {
-                samples[i] = (byte) (i & 0xff);
-            }
-
-            int samplesPerSecond = mainView.getSelectedSampleRate();
-
-            sampleBufferModel.setViewWidth(mainView.getTracePanelWidth());
-
-            sampleBufferModel.setSample(new SampleBuffer(samples, samplesPerSecond));
-        } catch (Throwable e) {
-            e.printStackTrace(System.out);
+        for (int i = 0, samplesLength = samples.length; i < samplesLength; i++) {
+            samples[i] = (byte) (i & 0xff);
         }
+
+        int samplesPerSecond = mainView.getSelectedSampleRate();
+
+        sampleBufferModel.setViewWidth(mainView.getTracePanelWidth());
+
+        sampleBufferModel.setSample(new SampleBuffer(samples, samplesPerSecond));
     }
 }

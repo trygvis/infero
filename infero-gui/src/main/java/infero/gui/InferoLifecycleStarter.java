@@ -7,6 +7,7 @@ import infero.gui.widgets.*;
 import static javax.swing.UIManager.*;
 import net.guts.gui.application.*;
 import net.guts.gui.application.WindowController.*;
+import net.guts.gui.exception.*;
 import net.guts.gui.exit.*;
 
 import javax.swing.*;
@@ -17,6 +18,7 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
     private final ExitController exitController;
     private final MainView mainView;
     private final MainMenuBar mainMenuBar;
+    private final ExceptionListModel exceptionListModel;
     private final MemoryUsageModel memoryUsageModel;
     private final InferoLog inferoLog;
 
@@ -25,19 +27,19 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
                                   ExitController exitController,
                                   MainView mainView,
                                   MainMenuBar mainMenuBar,
+                                  ExceptionListModel exceptionListModel,
                                   MemoryUsageModel memoryUsageModel,
                                   InferoLog inferoLog) {
         this.windowController = windowController;
         this.exitController = exitController;
         this.mainView = mainView;
         this.mainMenuBar = mainMenuBar;
+        this.exceptionListModel = exceptionListModel;
         this.memoryUsageModel = memoryUsageModel;
         this.inferoLog = inferoLog;
     }
 
     public void startup(String[] args) {
-        System.out.println("InferoLifecycleStarter.startup");
-
         try {
             setLookAndFeel(getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException e) {
@@ -83,6 +85,12 @@ public class InferoLifecycleStarter implements AppLifecycleStarter {
                 break;
             }
         }
+    }
+
+    @HandlesException
+    public boolean handleThrowable(Throwable throwable) {
+        exceptionListModel.addException(throwable);
+        return true;
     }
 
     public void ready() {

@@ -64,14 +64,8 @@ public class ChannelTracePanel extends JPanel {
     int repaintCounter;
 
     public void paint(Graphics g) {
-        try {
-            doPaint((Graphics2D) g);
-        } catch (Throwable e) {
-            e.printStackTrace(System.out);
-        }
-    }
+        Graphics2D graphics = (Graphics2D) g;
 
-    public void doPaint(Graphics2D graphics) {
         repaintCounter++;
 
         // -----------------------------------------------------------------------

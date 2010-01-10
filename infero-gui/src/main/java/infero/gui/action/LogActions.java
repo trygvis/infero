@@ -16,9 +16,7 @@ public class LogActions {
     }
 
     public final GutsAction clearLogEntriesAction = new GutsAction("action.clear-log-entries") {
-
         protected void perform() {
-            System.out.println("ClearLogEntriesAction.perform");
             model.clear();
             mainView.get().scrollToLastLogEntry();
         }
