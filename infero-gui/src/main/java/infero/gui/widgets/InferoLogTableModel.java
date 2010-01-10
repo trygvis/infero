@@ -1,26 +1,31 @@
 package infero.gui.widgets;
 
-import com.google.inject.*;
 import infero.gui.domain.*;
+import infero.gui.domain.InferoLog.*;
 
+import javax.swing.event.*;
 import javax.swing.table.*;
 import java.util.*;
 
-@Singleton
-public class InferoLogTableModel extends AbstractTableModel {
+public class InferoLogTableModel extends AbstractTableModel implements ChangeListener {
     private final String[] columnNames = new String[]{
             "Time",
             "Entry"
     };
 
-    private final List<InferoLogEntry> entries = new ArrayList<InferoLogEntry>();
+    private final InferoLog inferoLog;
+
+    public InferoLogTableModel(InferoLog inferoLog) {
+        this.inferoLog = inferoLog;
+        inferoLog.addChangeListener(this);
+    }
 
     // -----------------------------------------------------------------------
     // AbstractTableModel Implementation
     // -----------------------------------------------------------------------
 
     public int getRowCount() {
-        return entries.size();
+        return inferoLog.entries.size();
     }
 
     public int getColumnCount() {
@@ -39,7 +44,7 @@ public class InferoLogTableModel extends AbstractTableModel {
     }
 
     public Object getValueAt(int rowIndex, int columnIndex) {
-        InferoLogEntry logEntry = entries.get(rowIndex);
+        InferoLogEntry logEntry = inferoLog.entries.get(rowIndex);
 
         if (columnIndex == 0) {
             return logEntry.date;
@@ -51,21 +56,20 @@ public class InferoLogTableModel extends AbstractTableModel {
     //
     // -----------------------------------------------------------------------
 
-    public void logEntry(InferoLogEntry entry) {
+    public void stateChanged(ChangeEvent event) {
+        if (!(event instanceof LogSizeEvent)) {
+            return;
+        }
 
-        entries.add(entry);
-        super.fireTableRowsInserted(entries.size(), entries.size());
-    }
+        LogSizeEvent e = (LogSizeEvent) event;
 
-    public void logEntries(List<InferoLogEntry> entries) {
-        int firstRow = this.entries.size();
-        this.entries.addAll(entries);
-        super.fireTableRowsInserted(firstRow, firstRow + entries.size());
-    }
-
-    public void clear() {
-        int size = entries.size();
-        entries.clear();
-        super.fireTableRowsDeleted(0, size - 1);
+        if(e.newSize == 0) {
+            if(e.oldSize > 0) {
+                super.fireTableRowsDeleted(0, e.oldSize);
+            }
+        }
+        else {
+            super.fireTableRowsInserted(e.oldSize, e.newSize);
+        }
     }
 }

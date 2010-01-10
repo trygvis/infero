@@ -92,7 +92,7 @@ public class MainView extends FormPanel {
     @Inject
     public MainView(SampleBufferModel sampleBufferModel,
                     LogicAnalyzer logicAnalyzer,
-                    InferoLogTableModel inferoLogTableModel,
+                    InferoLog inferoLog,
                     MemoryUsageModel memoryUsageModel,
                     final ExceptionListModel exceptionListModel,
                     final ErrorFrame errorFrame,
@@ -103,7 +103,7 @@ public class MainView extends FormPanel {
         super("MainView.jfrm");
         this.sampleBufferModel = sampleBufferModel;
         this.logicAnalyzer = logicAnalyzer;
-        this.inferoLogTableModel = inferoLogTableModel;
+        this.inferoLogTableModel = new InferoLogTableModel(inferoLog);
 
         sampleCount = getComboBox(ID_SAMPLE_COUNT);
         sampleRate = getComboBox(ID_SAMPLE_RATE);
